@@ -75,7 +75,7 @@ export default function MateriasAdmin() {
   const updateFun = values => {
     setLoading(true);
 
-    const data = values
+    const data = {...values}
     data.programa = data.programa.clave;
     data.profesor = data.profesor.id;
     try {
@@ -422,6 +422,7 @@ export default function MateriasAdmin() {
                         style={{...styles.general.button_input}}
                         editable={editable || !update}
                         onChangeText={handleChange('aula')}
+                        keyboardType='numeric'
                         value={
                           values?.aula?.toString()
                         }

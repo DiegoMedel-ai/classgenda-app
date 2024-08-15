@@ -12,7 +12,7 @@ import AuthNav from '@/components/navigation/AuthNav'
 import useUser from "./hooks/useUser";
 import AdminNav from "./components/navigation/AdminNav";
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { MainComponent } from '@/components/MainComponent'
+import MainComponent from '@/components/MainComponent'
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();

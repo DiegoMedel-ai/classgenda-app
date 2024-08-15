@@ -3,7 +3,7 @@ import { View, Text, Image, ImageBackground } from "react-native";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
 import { Drawer, Chip } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LoginContext } from "../MainComponent";
+import LoginContext from "@/constants/loginContext";
 import Icon from "react-native-vector-icons/FontAwesome6";
 import { styles } from "@/constants/styles";
 import theme from "@/constants/theme";

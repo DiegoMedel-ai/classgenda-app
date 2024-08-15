@@ -6,8 +6,7 @@ import AuthNav from '@/components/navigation/AuthNav'
 import useUser from "@/hooks/useUser";
 import AdminNav from "@/components/navigation/AdminNav";
 import { View } from "react-native";
-
-const LoginContext = createContext();
+import LoginContext from "@/constants/loginContext";
 
 function MainComponent() {
   const { user, setUser, getUser } = useUser()
@@ -38,4 +37,4 @@ function MainComponent() {
   );
 }
 
-export {MainComponent, LoginContext}
+export default MainComponent

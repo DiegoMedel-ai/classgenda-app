@@ -6,7 +6,7 @@ import Icon from "react-native-vector-icons/Feather";
 import theme from "@/constants/theme";
 import { Formik } from "formik";
 import { loginSchema } from "@/constants/schemas";
-import { LoginContext } from "@/components/MainComponent"
+import LoginContext from "@/constants/loginContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Login = ({ navigation }) => {

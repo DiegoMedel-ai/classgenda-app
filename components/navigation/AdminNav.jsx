@@ -8,6 +8,8 @@ import { styles } from "@/constants/styles";
 import { Text } from "react-native-paper";
 import ProgramasAdmin from "@/components/Admin/Programas";
 import MateriasAdmin from "@/components/Admin/Materias";
+import AlumnosAdmin from "@/components/Admin/Alumnos";
+import HorarioAlumnosAdmin from "../Admin/HorarioAlumnos";
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -63,7 +65,43 @@ function MateriaStack() {
         options={{
           headerTitleAlign: "center",
           headerTitle: (props) => (
-            <Text style={styles.general.drawer_title}>Programas</Text>
+            <Text style={styles.general.drawer_title}>Materias</Text>
+          ),
+          headerStyle: styles.general.drawer_style,
+          headerBackgroundContainerStyle: {
+            backgroundColor: theme.colors.white,
+          },
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function AlumnoStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="AlumnoHome"
+        component={AlumnosAdmin}
+        options={{
+          headerTitleAlign: "center",
+          headerTitle: (props) => (
+            <Text style={styles.general.drawer_title}>Alumnos</Text>
+          ),
+          headerStyle: styles.general.drawer_style,
+          headerBackgroundContainerStyle: {
+            backgroundColor: theme.colors.white,
+          },
+        }}
+      />
+      <Stack.Screen
+        name="Horario"
+        component={HorarioAlumnosAdmin}
+        initialParams={{alumnoId: 0}}
+        options={{
+          headerTitleAlign: "center",
+          headerTitle: (props) => (
+            <Text style={styles.general.drawer_title}>Horario</Text>
           ),
           headerStyle: styles.general.drawer_style,
           headerBackgroundContainerStyle: {
@@ -97,6 +135,14 @@ export default function AdminNav() {
       <Drawer.Screen
         name="Materias"
         component={MateriaStack}
+        options={{
+          headerTitle: "",
+          headerStyle: { backgroundColor: theme.colors.tertiary_op },
+        }}
+      />
+      <Drawer.Screen
+        name="Alumnos"
+        component={AlumnoStack}
         options={{
           headerTitle: "",
           headerStyle: { backgroundColor: theme.colors.tertiary_op },
