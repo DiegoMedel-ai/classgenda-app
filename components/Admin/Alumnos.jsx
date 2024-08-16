@@ -709,7 +709,7 @@ export default function AlumnosAdmin({navigation}) {
             <View style={{ alignItems: "center" }}>
               <IconFeather name="check-circle" color="green" size={40} />
               <Text style={{ textAlign: "center", marginTop: 10 }}>
-                Programa {update ? "modificado" : "agregado"} correctamente!
+                Alumno {update ? "modificado" : "agregado"} correctamente!
               </Text>
             </View>
           ) : (

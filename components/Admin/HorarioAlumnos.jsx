@@ -14,6 +14,10 @@ export default function HorarioAlumnosAdmin({ route, navigation }) {
     }, [])
     
     return(
-            <Horario userId={alumnoId}/>
+      <>
+      <View style={{flexDirection: 'column', height: '100%'}}>
+        <Horario userId={alumnoId}/>
+      </View>
+      </>
     )
 }
