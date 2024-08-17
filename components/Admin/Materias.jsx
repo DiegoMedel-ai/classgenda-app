@@ -9,7 +9,7 @@ import {
   Portal,
 } from 'react-native-paper';
 import theme from '@/constants/theme';
-import {View, ActivityIndicator, ScrollView, TextInput} from 'react-native';
+import {View, ActivityIndicator, ScrollView, TextInput, Alert} from 'react-native';
 import SelectDropdown from 'react-native-select-dropdown';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import IconFeather from 'react-native-vector-icons/Feather';
@@ -104,6 +104,49 @@ export default function MateriasAdmin() {
           }
         })
         .catch(error => {
+          console.log(`Fetch error to: ${url}`, error);
+        });
+    } catch (error) {}
+  };
+  
+  const deleteFun = () => {
+    setLoading(true);
+
+    try {
+      const options = {
+        method: "GET",
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/materias/delete/${materiaSelected.nrc}`;
+
+      fetch(url, options)
+        .then((response) => {
+          if (response.status === 200) {
+            Alert.alert(
+              "Materia eliminada",
+              "Se ha eliminado el registro correctamente",
+              [
+                {
+                  text: "Ok",
+                  style: "cancel",
+                  onPress: () => fetchMaterias(),
+                },
+              ]
+            );
+          } else {
+            Alert.alert("Error", "Se tienen relacionados horarios/programas a esta materia por lo que no se puede eliminar", [
+              {
+                text: "Ok",
+                style: "cancel",
+                onPress: setLoading(false)
+              },
+            ]);
+          }
+        })
+        .catch((error) => {
           console.log(`Fetch error to: ${url}`, error);
         });
     } catch (error) {}
@@ -527,7 +570,24 @@ export default function MateriasAdmin() {
                     <Button
                       mode="elevated"
                       textColor="black"
-                      buttonColor={theme.colors.tertiary}>
+                      buttonColor={theme.colors.tertiary}
+                      onPress={() => {
+                        Alert.alert(
+                          "Eliminar materia",
+                          "Estás seguro de eliminar esta materia?",
+                          [
+                            {
+                              text: "Confirmar",
+                              style: "default",
+                              onPress: () => deleteFun(),
+                            },
+                            {
+                              text: "Cancelar",
+                              style: "cancel",
+                            },
+                          ]
+                        );
+                      }}>
                       Eliminar
                     </Button>
                   </View>

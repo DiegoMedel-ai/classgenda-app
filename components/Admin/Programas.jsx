@@ -9,15 +9,12 @@ import {
   Modal,
   Portal,
 } from "react-native-paper";
-import { View, ActivityIndicator, ScrollView, TextInput } from "react-native";
+import { View, ActivityIndicator, ScrollView, TextInput, Alert } from "react-native";
 import SelectDropdown from "react-native-select-dropdown";
 import Icon from "react-native-vector-icons/FontAwesome6";
 import IconFeather from "react-native-vector-icons/Feather";
 import { Formik } from "formik";
 import { programaSchema } from "@/constants/schemas";
-import DatePicker from "react-native-date-picker";
-import { adjustTimeZone, getDateFormat, setDateTimeZone } from "@/hooks/date";
-import WeekdaySelector from "@/components/WeekDaySelect";
 
 export default function ProgramasAdmin() {
   const initPrograma = {
@@ -113,13 +110,54 @@ export default function ProgramasAdmin() {
     } catch (error) {}
   };
 
+  const deleteFun = () => {
+    setLoading(true);
+
+    try {
+      const options = {
+        method: "GET",
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/programas/delete/${programaSelected.clave}`;
+
+      fetch(url, options)
+        .then((response) => {
+          if (response.status === 200) {
+            Alert.alert(
+              "Programa eliminado",
+              "Se ha eliminado el registro correctamente",
+              [
+                {
+                  text: "Ok",
+                  style: "cancel",
+                  onPress: () => fetchProgramas(),
+                },
+              ]
+            );
+          } else {
+            Alert.alert("Error", "Se tienen relacionadas materias a este programa por lo que no se puede eliminar", [
+              {
+                text: "Ok",
+                style: "cancel",
+                onPress: setLoading(false)
+              },
+            ]);
+          }
+        })
+        .catch((error) => {
+          console.log(`Fetch error to: ${url}`, error);
+        });
+    } catch (error) {}
+  };
+
   useEffect(() => {
     fetchProgramas();
   }, []);
 
-  useEffect(() => {
-    console.log(programaSelected);
-    
+  useEffect(() => {    
     selectRequisito.current?.selectIndex(
       programas.findIndex((x) => x.clave === programaSelected?.requisito)+1
     );
@@ -568,6 +606,23 @@ export default function ProgramasAdmin() {
                       mode="elevated"
                       textColor="black"
                       buttonColor={theme.colors.tertiary}
+                      onPress={() => {
+                        Alert.alert(
+                          "Eliminar programa",
+                          "Estás seguro de eliminar este programa?",
+                          [
+                            {
+                              text: "Confirmar",
+                              style: "default",
+                              onPress: () => deleteFun(),
+                            },
+                            {
+                              text: "Cancelar",
+                              style: "cancel",
+                            },
+                          ]
+                        );
+                      }}
                     >
                       Eliminar
                     </Button>

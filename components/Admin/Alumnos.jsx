@@ -9,7 +9,13 @@ import {
   Modal,
   Portal,
 } from "react-native-paper";
-import { View, ActivityIndicator, ScrollView, TextInput } from "react-native";
+import {
+  View,
+  ActivityIndicator,
+  ScrollView,
+  TextInput,
+  Alert,
+} from "react-native";
 import SelectDropdown from "react-native-select-dropdown";
 import Icon from "react-native-vector-icons/FontAwesome6";
 import IconFeather from "react-native-vector-icons/Feather";
@@ -19,7 +25,7 @@ import DatePicker from "react-native-date-picker";
 import { adjustTimeZone, getDateFormat, setDateTimeZone } from "@/hooks/date";
 import WeekdaySelector from "@/components/WeekDaySelect";
 
-export default function AlumnosAdmin({navigation}) {
+export default function AlumnosAdmin({ navigation }) {
   const initAlumno = {
     id: 0,
     rol: 2,
@@ -41,36 +47,29 @@ export default function AlumnosAdmin({navigation}) {
     "LIAB",
     "INCE",
     "Topografía",
-    "IGFO"
-  ]
+    "IGFO",
+  ];
 
   const situaciones = [
     {
       id: 1,
-      situacion: "Activo"
+      situacion: "Activo",
     },
     {
       id: 2,
-      situacion: "Inactivo"
+      situacion: "Inactivo",
     },
-  ]
+  ];
 
-  const centros = [
-    "CUCEI",
-    "CUCS"
-  ]
-  
-  const [materias, setMaterias] = useState([]);
+  const centros = ["CUCEI", "CUCS"];
+
   const [alumnos, setAlumnos] = useState([]);
-  const [profesores, setProfesores] = useState([]);
   const [loading, setLoading] = useState(false);
   const [alumnoSelected, setAlumnoSelected] = useState(initAlumno);
   const [editable, setEditable] = useState(false);
   const [update, setUpdate] = useState(true);
   const [visibleModal, setVisibleModal] = useState(false);
   const [successResult, setSuccessResult] = useState(false);
-  const [openInitHour, setOpenInitHour] = useState(false);
-  const [openFinalHour, setOpenFinalHour] = useState(false);
   const select = useRef();
   const selectCarrera = useRef();
   const selectCentro = useRef();
@@ -134,6 +133,48 @@ export default function AlumnosAdmin({navigation}) {
               fetchAlumnos(true);
               setUpdate(true);
             }, 800);
+          }
+        })
+        .catch((error) => {
+          console.log(`Fetch error to: ${url}`, error);
+        });
+    } catch (error) {}
+  };
+
+  const deleteFun = () => {
+    setLoading(true);
+
+    try {
+      const options = {
+        method: "GET",
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/users/delete/${alumnoSelected.id}`;
+
+      fetch(url, options)
+        .then((response) => {
+          if (response.status === 200) {
+            Alert.alert(
+              "Alumno eliminado",
+              "Se ha eliminado el registro correctamente",
+              [
+                {
+                  text: "Ok",
+                  style: "cancel",
+                  onPress: () => fetchAlumnos(),
+                },
+              ]
+            );
+          } else {
+            Alert.alert("Error", "Ha ocurrido un error al eliminar al alumno", [
+              {
+                text: "Ok",
+                style: "cancel",
+              },
+            ]);
           }
         })
         .catch((error) => {
@@ -261,38 +302,17 @@ export default function AlumnosAdmin({navigation}) {
                       elevation: 5,
                     }}
                   >
-                    <View style={{ ...styles.general.center, width: "97%", marginTop: 10 }}>
-                      <Text style={{...styles.general.title, fontSize: 20}}>Info del alumno</Text>
-                    </View>
-                  <View style={{ ...styles.general.center, width: "97%" }}>
                     <View
                       style={{
-                        marginTop: 20,
-                        flexDirection: "row",
+                        ...styles.general.center,
+                        width: "97%",
+                        marginTop: 10,
                       }}
                     >
-                      <Text
-                        style={{
-                          paddingHorizontal: 10,
-                          textAlignVertical: "center",
-                          width: '30%'
-                        }}
-                      >
-                        Nombre(s):
+                      <Text style={{ ...styles.general.title, fontSize: 20 }}>
+                        Info del alumno
                       </Text>
-                      <TextInput
-                        style={{
-                          ...styles.general.button_input,
-                          width: "65%",
-                          marginVertical: "auto",
-                          marginTop: 0,
-                        }}
-                        editable={editable || !update}
-                        onChangeText={handleChange("nombre")}
-                        value={values?.nombre}
-                      />
                     </View>
-                  </View>
                     <View style={{ ...styles.general.center, width: "97%" }}>
                       <View
                         style={{
@@ -304,7 +324,36 @@ export default function AlumnosAdmin({navigation}) {
                           style={{
                             paddingHorizontal: 10,
                             textAlignVertical: "center",
-                          width: '30%'
+                            width: "30%",
+                          }}
+                        >
+                          Nombre(s):
+                        </Text>
+                        <TextInput
+                          style={{
+                            ...styles.general.button_input,
+                            width: "65%",
+                            marginVertical: "auto",
+                            marginTop: 0,
+                          }}
+                          editable={editable || !update}
+                          onChangeText={handleChange("nombre")}
+                          value={values?.nombre}
+                        />
+                      </View>
+                    </View>
+                    <View style={{ ...styles.general.center, width: "97%" }}>
+                      <View
+                        style={{
+                          marginTop: 20,
+                          flexDirection: "row",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            paddingHorizontal: 10,
+                            textAlignVertical: "center",
+                            width: "30%",
                           }}
                         >
                           Apellidos:
@@ -333,7 +382,7 @@ export default function AlumnosAdmin({navigation}) {
                           style={{
                             paddingHorizontal: 10,
                             textAlignVertical: "center",
-                          width: '30%'
+                            width: "30%",
                           }}
                         >
                           Codigo:
@@ -345,7 +394,7 @@ export default function AlumnosAdmin({navigation}) {
                             marginVertical: "auto",
                             marginTop: 0,
                           }}
-                          editable={editable || !update}
+                          editable={false}
                           onChangeText={handleChange("id")}
                           value={values?.id?.toString()}
                         />
@@ -362,7 +411,7 @@ export default function AlumnosAdmin({navigation}) {
                           style={{
                             paddingHorizontal: 10,
                             textAlignVertical: "center",
-                          width: '30%'
+                            width: "30%",
                           }}
                         >
                           Correo:
@@ -391,7 +440,7 @@ export default function AlumnosAdmin({navigation}) {
                           style={{
                             paddingHorizontal: 10,
                             textAlignVertical: "center",
-                          width: '30%'
+                            width: "30%",
                           }}
                         >
                           Telefono:
@@ -421,7 +470,7 @@ export default function AlumnosAdmin({navigation}) {
                           style={{
                             paddingHorizontal: 10,
                             textAlignVertical: "center",
-                          width: '30%'
+                            width: "30%",
                           }}
                         >
                           Carrera:
@@ -433,13 +482,13 @@ export default function AlumnosAdmin({navigation}) {
                           renderButton={(selectedItem, isOpen) => {
                             return (
                               <View
-                              style={{
-                                ...styles.general.button_input,
-                                width: "65%",
-                                marginVertical: "auto",
-                                marginTop: 0,
-                                paddingVertical: 5
-                              }}
+                                style={{
+                                  ...styles.general.button_input,
+                                  width: "65%",
+                                  marginVertical: "auto",
+                                  marginTop: 0,
+                                  paddingVertical: 5,
+                                }}
                               >
                                 <Text>
                                   {(selectedItem && `${selectedItem}`) ||
@@ -458,14 +507,10 @@ export default function AlumnosAdmin({navigation}) {
                                 paddingVertical: 10,
                               }}
                             >
-                              <Text>
-                                {item}
-                              </Text>
+                              <Text>{item}</Text>
                             </View>
                           )}
-                          onSelect={(item) =>
-                            setFieldValue("carrera", item)
-                          }
+                          onSelect={(item) => setFieldValue("carrera", item)}
                           search
                           dropdownStyle={{ borderRadius: 10, height: 300 }}
                           searchInputTxtColor={"black"}
@@ -494,7 +539,7 @@ export default function AlumnosAdmin({navigation}) {
                           style={{
                             paddingHorizontal: 10,
                             textAlignVertical: "center",
-                          width: '30%'
+                            width: "30%",
                           }}
                         >
                           Centro:
@@ -506,13 +551,13 @@ export default function AlumnosAdmin({navigation}) {
                           renderButton={(selectedItem, isOpen) => {
                             return (
                               <View
-                              style={{
-                                ...styles.general.button_input,
-                                width: "65%",
-                                marginVertical: "auto",
-                                marginTop: 0,
-                                paddingVertical: 5,
-                              }}
+                                style={{
+                                  ...styles.general.button_input,
+                                  width: "65%",
+                                  marginVertical: "auto",
+                                  marginTop: 0,
+                                  paddingVertical: 5,
+                                }}
                               >
                                 <Text>
                                   {(selectedItem && `${selectedItem}`) ||
@@ -531,15 +576,10 @@ export default function AlumnosAdmin({navigation}) {
                                 paddingVertical: 10,
                               }}
                             >
-                              <Text>
-                                {item}
-                              </Text>
+                              <Text>{item}</Text>
                             </View>
                           )}
-                          
-                          onSelect={(item) =>
-                            setFieldValue("centro", item)
-                          }
+                          onSelect={(item) => setFieldValue("centro", item)}
                           search
                           dropdownStyle={{ borderRadius: 10 }}
                           searchInputTxtColor={"black"}
@@ -557,7 +597,13 @@ export default function AlumnosAdmin({navigation}) {
                         />
                       </View>
                     </View>
-                    <View style={{ ...styles.general.center, width: "97%", marginBottom: 20 }}>
+                    <View
+                      style={{
+                        ...styles.general.center,
+                        width: "97%",
+                        marginBottom: 20,
+                      }}
+                    >
                       <View
                         style={{
                           marginTop: 20,
@@ -568,7 +614,7 @@ export default function AlumnosAdmin({navigation}) {
                           style={{
                             paddingHorizontal: 10,
                             textAlignVertical: "center",
-                          width: '30%'
+                            width: "30%",
                           }}
                         >
                           Situación:
@@ -580,16 +626,17 @@ export default function AlumnosAdmin({navigation}) {
                           renderButton={(selectedItem, isOpen) => {
                             return (
                               <View
-                              style={{
-                                ...styles.general.button_input,
-                                width: "65%",
-                                marginVertical: "auto",
-                                marginTop: 0,
-                                paddingVertical: 5
-                              }}
+                                style={{
+                                  ...styles.general.button_input,
+                                  width: "65%",
+                                  marginVertical: "auto",
+                                  marginTop: 0,
+                                  paddingVertical: 5,
+                                }}
                               >
                                 <Text>
-                                  {(selectedItem && `${selectedItem.situacion}`) ||
+                                  {(selectedItem &&
+                                    `${selectedItem.situacion}`) ||
                                     "Ninguna"}
                                 </Text>
                               </View>
@@ -632,47 +679,67 @@ export default function AlumnosAdmin({navigation}) {
                     </View>
                   </View>
                 </ScrollView>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-evenly",
-                      width: "100%",
-                      paddingTop: 10,
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-evenly",
+                    width: "100%",
+                    paddingTop: 10,
+                  }}
+                >
+                  <Button
+                    mode="elevated"
+                    style={{ ...(!alumnoSelected && { marginTop: 10 }) }}
+                    textColor="black"
+                    buttonColor={theme.colors.tertiary}
+                    onPress={() =>
+                      navigation.navigate("Horario", {
+                        alumnoId: alumnoSelected.id,
+                      })
+                    }
+                  >
+                    Horario
+                  </Button>
+                  <Button
+                    mode="elevated"
+                    textColor="black"
+                    buttonColor={theme.colors.tertiary}
+                    onPress={() => {
+                      if (editable) {
+                        handleSubmit();
+                        setEditable((prev) => !prev);
+                      } else {
+                        setEditable((prev) => !prev);
+                      }
                     }}
                   >
-                    <Button
-                      mode="elevated"
-                      style={{ ...(!alumnoSelected && { marginTop: 10 }) }}
-                      textColor="black"
-                      buttonColor={theme.colors.tertiary}
-                      onPress={() => navigation.navigate("Horario", { alumnoId: alumnoSelected.id })}
-                    >
-                      Horario
-                    </Button>
-                    <Button
-                      mode="elevated"
-                      textColor="black"
-                      buttonColor={theme.colors.tertiary}
-                      onPress={() => {
-                        if (editable) {
-                          handleSubmit();
-                          setEditable((prev) => !prev);
-                        } else {
-                          setEditable((prev) => !prev);
-                        }
-                      }}
-                    >
-                      {editable ? "Guardar" : "Actualizar"}
-                    </Button>
-                    <Button
-                      mode="elevated"
-                      textColor="black"
-                      buttonColor={theme.colors.tertiary}
-                    >
-                      Eliminar
-                    </Button>
-                  </View>
-                
+                    {editable ? "Guardar" : "Actualizar"}
+                  </Button>
+                  <Button
+                    mode="elevated"
+                    textColor="black"
+                    buttonColor={theme.colors.tertiary}
+                    onPress={() => {
+                      Alert.alert(
+                        "Eliminar usuario",
+                        "Estás seguro de eliminar a este usuario?",
+                        [
+                          {
+                            text: "Confirmar",
+                            style: "default",
+                            onPress: () => deleteFun(),
+                          },
+                          {
+                            text: "Cancelar",
+                            style: "cancel",
+                          },
+                        ]
+                      );
+                    }}
+                  >
+                    Eliminar
+                  </Button>
+                </View>
 
                 <HelperText
                   type="error"
