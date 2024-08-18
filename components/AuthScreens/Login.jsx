@@ -15,11 +15,6 @@ const Login = ({ navigation }) => {
 
   const { user, getUser } = useContext(LoginContext)
 
-  useEffect(() => {
-    console.log(user);
-    
-  }, [user])
-
   const login = (values) => {
     setLoading(true)
     const options = {

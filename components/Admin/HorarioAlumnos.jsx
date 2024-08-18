@@ -153,7 +153,6 @@ const Horario = ({ userId }) => {
     setFilteredMaterias(materiasFiltradas);
   }
 
-
   const deleteInscripcion = () => {
     setLoading(true);
 

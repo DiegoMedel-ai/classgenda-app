@@ -177,6 +177,25 @@ const styles = {
       backgroundColor: theme.colors.primary,
       marginTop: 20,
     }
+  },
+  horario: {
+    touchable: {
+      width: "90%",
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      marginVertical: 10,
+      borderRadius: 10,
+    },
+    container: {
+      paddingTop: 20,
+      height: "100%",
+    },
+    card: {
+      padding: 15,
+      marginVertical: 8,
+      marginHorizontal: 16,
+      borderRadius: 10,
+    }
   }
 };
 

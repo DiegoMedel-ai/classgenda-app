@@ -11,32 +11,28 @@ import {NavigationContainer} from '@react-navigation/native';
 import AuthNav from '@/components/navigation/AuthNav'
 import useUser from "./hooks/useUser";
 import AdminNav from "./components/navigation/AdminNav";
+import MaestroNav from "./components/navigation/MaestroNav";
 import { useColorScheme } from '@/hooks/useColorScheme';
 import MainComponent from '@/components/MainComponent'
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export const LoginContext = createContext();
-
 function App() {
   const { user, setUser, getUser } = useUser()
 
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     Poetsen: require('@/assets/fonts/PoetsenOne-Regular.ttf'),
   });
 
-  const navRol = [
-    {
-      rol: 'admin',
-      component: <AdminNav />,
-    },
-  ];
-
   useEffect(() => {
     const checkUser = async () => {
       await getUser();
+    };
+    const handleSignOut = async () => {
+      await AsyncStorage.removeItem("user:id");
+      await AsyncStorage.removeItem("user:rol");
+      getUser();
     };
 
     checkUser();
