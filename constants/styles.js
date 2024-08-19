@@ -14,6 +14,12 @@ const styles = {
       justifyContent: "center",
       alignItems: "center",
     },
+    overlay_top: {
+      height: "100%",
+      width: "100%",
+      justifyContent: "top",
+      alignItems: "center",
+    },
     button: {
       marginTop: 40,
       width: "45%",

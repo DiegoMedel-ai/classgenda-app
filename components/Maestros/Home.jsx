@@ -59,8 +59,8 @@ const HomeMaestro = ({ route, navigation }) => {
         onPress={onPress}
         style={[styles.horario.touchable, { backgroundColor, width }]}
       >
-        <View style={{flexDirection: 'row'}}>
-          <View style={{width: isSelected ? '85%' : '100%'}}>
+        <View style={{ flexDirection: "row" }}>
+          <View style={{ width: isSelected ? "85%" : "100%" }}>
             <Text
               style={{
                 width: "100%",
@@ -85,14 +85,6 @@ const HomeMaestro = ({ route, navigation }) => {
                       item.hora_final
                     )}`}
               </Text>
-              <Text style={{ fontSize: isSelected ? 15 : 13 }}>
-                {JSON.parse(item.dias_clase)
-                  .map((item) => item.slice(0, 2))
-                  .join(" - ")}
-              </Text>
-              <Text style={{ fontSize: isSelected ? 15 : 13 }}>
-                Aula: {item.edificio}-{item.aula.toString()}
-              </Text>
             </View>
             {isSelected && (
               <View
@@ -112,16 +104,29 @@ const HomeMaestro = ({ route, navigation }) => {
                   {getDateFormat24(item.hora_inicio)} -{" "}
                   {getDateFormat24(item.hora_final)}
                 </Text>
+                <Text style={{ fontSize: isSelected ? 13 : 10 }}>
+                  Aula: {item.edificio}-{item.aula.toString()}
+                </Text>
               </View>
             )}
           </View>
-          {isSelected && 
-            <View style={{...styles.general.center, width: '15%'}}>
-              <Pressable style={{...styles.general.center, elevation: 5, width: 50, height: 50, borderRadius: 50, backgroundColor: theme.colors.tertiary_op}}>
-                <Icon name="list" color={'black'} size={20}/>
+          {isSelected && (
+            <View style={{ ...styles.general.center, width: "15%" }}>
+              <Pressable
+                style={{
+                  ...styles.general.center,
+                  elevation: 5,
+                  width: 50,
+                  height: 50,
+                  borderRadius: 50,
+                  backgroundColor: theme.colors.tertiary_op,
+                }}
+                onPressIn={() => navigation.navigate("Materia", { materiaNrc: item.nrc })}
+              >
+                <Icon name="list" color={"black"} size={20} />
               </Pressable>
             </View>
-          }
+          )}
         </View>
       </Pressable>
     </View>
@@ -257,7 +262,9 @@ const HomeMaestro = ({ route, navigation }) => {
         </View>
       </View>
       <View style={{ ...styles.horario.container, width: "100%" }}>
-        <Text style={{paddingBottom: 10, fontSize: 23, marginLeft: 25}}>Horario</Text>
+        <Text style={{ paddingBottom: 10, fontSize: 23, marginLeft: 25 }}>
+          Horario
+        </Text>
         {Array.isArray(inscripcionesShow) && inscripcionesShow.length > 0 && (
           <FlatList
             refreshControl={
