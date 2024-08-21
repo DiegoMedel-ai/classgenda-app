@@ -1,7 +1,15 @@
 import React, { createContext, useContext, useState } from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import HomeMaestro from "../Maestros/Home";
+import HomeJefeAcademia from "../JefeAcademia/Home";
+import OptionsPrograma from "../JefeAcademia/OptionsPrograma";
+import ViewProgramas from "../JefeAcademia/ViewPrograma";
+import EditProgramas from "../JefeAcademia/EditPrograma";
+import ListProgramas from "../JefeAcademia/ListProgramas";
+import ListMaterias from "../JefeAcademia/ListMaterias";
+import OptionsMateria from "../JefeAcademia/OptionsMateria";
+import ProfesorDetails from "../JefeAcademia/InfoProfesor";
+import ListProfesores from "../JefeAcademia/ListProfesores";
 import MateriaDetails from "../Maestros/MateriaDetails";
 import ProgramaDetails from "../Maestros/Programa";
 import Reportes from "../Maestros/Reportes";
@@ -25,20 +33,134 @@ function HomeStack() {
 
   return (
     <Stack.Navigator>
-      <Stack.Screen
-        name="Home"
-        component={HomeMaestro}
-        initialParams={{userId: user.id}}
-        options={{
-          headerShown: false
-        }}
-        listeners={{
-            focus: () => {
-                setHeaderColor(theme.colors.primary)
-                setShownDrawerHeader(true)
-            }
-        }}
-      />
+    <Stack.Screen
+      name="Home"
+      component={HomeJefeAcademia}
+      options={{
+        headerShown: false
+      }}
+      listeners={{
+          focus: () => {
+              setHeaderColor(theme.colors.primary_op)
+              setShownDrawerHeader(true)
+          }
+      }}
+    />
+    <Stack.Screen
+      name="OptionsPrograma"
+      component={OptionsPrograma}
+      options={{
+        headerStyle: { backgroundColor: headerColor },
+        headerTitle: ""
+      }}
+      listeners={{
+          focus: () => {
+              setHeaderColor(theme.colors.secondary_op)
+              setShownDrawerHeader(false)
+          }
+      }}
+    />
+    <Stack.Screen
+      name="ViewProgramas"
+      component={ViewProgramas}
+      options={{
+        headerStyle: { backgroundColor: headerColor },
+        headerTitle: ""
+      }}
+      listeners={{
+          focus: () => {
+              setHeaderColor(theme.colors.tertiary_op)
+              setShownDrawerHeader(false)
+          }
+      }}
+    />
+    <Stack.Screen
+      name="EditProgramas"
+      component={EditProgramas}
+      options={{
+        headerStyle: { backgroundColor: headerColor },
+        headerTitle: ""
+      }}
+      listeners={{
+          focus: () => {
+              setHeaderColor(theme.colors.tertiary_op)
+              setShownDrawerHeader(false)
+          }
+      }}
+    />
+    <Stack.Screen
+      name="ListProgramas"
+      component={ListProgramas}
+      options={{
+        headerStyle: { backgroundColor: headerColor },
+        headerTitle: ""
+      }}
+      listeners={{
+          focus: () => {
+              setHeaderColor(theme.colors.primary_op)
+              setShownDrawerHeader(false)
+          }
+      }}
+    />
+    <Stack.Screen
+      name="ListMaterias"
+      component={ListMaterias}
+      initialParams={{programaClave: 0}}
+      options={{
+        headerStyle: { backgroundColor: headerColor },
+        headerTitle: ""
+      }}
+      listeners={{
+          focus: () => {
+              setHeaderColor(theme.colors.primary_op)
+              setShownDrawerHeader(false)
+          }
+      }}
+    />
+    <Stack.Screen
+      name="OptionsMateria"
+      component={OptionsMateria}
+      initialParams={{materiaNrc: 0,maestroId: 0}}
+      options={{
+        headerStyle: { backgroundColor: headerColor },
+        headerTitle: ""
+      }}
+      listeners={{
+          focus: () => {
+              setHeaderColor(theme.colors.primary_op)
+              setShownDrawerHeader(false)
+          }
+      }}
+    />
+    <Stack.Screen
+      name="ProfesorDetails"
+      component={ProfesorDetails}
+      initialParams={{maestroId: 0}}
+      options={{
+        headerStyle: { backgroundColor: headerColor },
+        headerTitle: ""
+      }}
+      listeners={{
+          focus: () => {
+              setHeaderColor(theme.colors.tertiary_op)
+              setShownDrawerHeader(false)
+          }
+      }}
+    />
+    <Stack.Screen
+      name="ListProfesores"
+      component={ListProfesores}
+      options={{
+        headerStyle: { backgroundColor: headerColor },
+        headerTitle: ""
+      }}
+      listeners={{
+          focus: () => {
+              setHeaderColor(theme.colors.secondary_op)
+              setShownDrawerHeader(false)
+          }
+      }}
+    />
       <Stack.Screen
         name="Materia"
         component={MateriaDetails}
@@ -133,7 +255,7 @@ function HomeStack() {
   );
 }
 
-export default function MaestroNav() {
+export default function JefeAcademiaNav() {
   const [headerColor, setHeaderColor] = useState(theme.colors.primary);
   const [shownDrawerHeader, setShownDrawerHeader] = useState(true)
 

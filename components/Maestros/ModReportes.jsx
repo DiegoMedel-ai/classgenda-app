@@ -5,7 +5,7 @@ import {
   Alert,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 import { styles as style } from "@/constants/styles";
 import theme from "@/constants/theme";
@@ -19,17 +19,21 @@ import {
   TextInput as Input,
   Button,
 } from "react-native-paper";
+import * as DocumentPicker from "expo-document-picker";
+import { ALERT_TYPE, Toast } from "react-native-alert-notification";
+import { Linking } from "react-native";
 
 const CheckboxTree = ({ route, navigation }) => {
   const { materiaNrc } = route.params;
   const [visibleModal, setVisibleModal] = useState(false);
   const [subtitleToAdd, setSubtitleToAdd] = useState();
+  const [reportes, setReportes] = useState([]);
   const [newPathRef, setNewPathRef] = useState([]);
   const [nameToAdd, setNameToAdd] = useState("");
   const [typeOfSub, setTypeOfSub] = useState("tema");
   const [tree, setTree] = useState({});
-  const [materia, setMateria] = useState()
-  const [loading, setLoading] = useState(false)
+  const [materia, setMateria] = useState();
+  const [loading, setLoading] = useState(false);
 
   const handleCheckboxChange = (path) => {
     const updatedTree = { ...tree };
@@ -109,6 +113,28 @@ const CheckboxTree = ({ route, navigation }) => {
     setTree(updatedTree);
   };
 
+  const openPDF = async (pdf_url) => {
+    try {
+      const supported = await Linking.canOpenURL(pdf_url);
+
+      if (supported) {
+        await Linking.openURL(pdf_url);
+      } else {
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: "Error",
+          textBody: "No se puede abrir el pdf",
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: "Error",
+        textBody: "Error al intentar abrir el pdf",
+      });
+    }
+  };
+
   const renderTree = (node, path = []) => {
     return Object.keys(node).map((key) => {
       const newPath = [...path, key];
@@ -121,6 +147,70 @@ const CheckboxTree = ({ route, navigation }) => {
               onPress={() => handleCheckboxChange(newPath)}
             />
             <Text style={{ fontSize: 15 }}>{key.replace(/_/g, ".")}</Text>
+            {newPath.length <= 1 && node[key].value === 1 && (
+              <>
+                {reportes.find((item) =>
+                  newPath[0].split("_")[0].includes(item?.temas)
+                ) ? (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => selectFile(newPath[0].split("_")[0])}
+                      style={{
+                        height: 30,
+                        paddingVertical: 0,
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Icon
+                        name="file-signature"
+                        color={"black"}
+                        size={20}
+                        style={{ paddingLeft: 10 }}
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() =>
+                        openPDF(
+                          `https://docs.google.com/gview?embedded=true&url=${process.env.EXPO_PUBLIC_STORAGE_URL}/pdfs/${
+                            reportes.find((item) =>
+                              newPath[0].split("_")[0].includes(item?.temas)
+                            ).pdf_uid
+                          }`
+                        )
+                      }
+                      style={{
+                        height: 30,
+                        paddingVertical: 0,
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Icon
+                        name="file"
+                        color={"black"}
+                        size={20}
+                        style={{ paddingLeft: 10 }}
+                      />
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => selectFile(newPath[0].split("_")[0])}
+                    style={{
+                      height: 30,
+                      paddingVertical: 0,
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon
+                      name="file-arrow-up"
+                      color={"black"}
+                      size={20}
+                      style={{ paddingLeft: 10 }}
+                    />
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
           </View>
           <TouchableOpacity
             onPress={() => {
@@ -165,7 +255,7 @@ const CheckboxTree = ({ route, navigation }) => {
         .then((response) => response.json())
         .then((data) => {
           setMateria(data);
-          setTree(JSON.parse(data.temas))
+          setTree(JSON.parse(data.temas));
         })
         .then(() => setLoading(false))
         .catch((error) => {
@@ -177,12 +267,40 @@ const CheckboxTree = ({ route, navigation }) => {
     } catch (error) {}
   };
 
-  const updateTemas = () => {    
+  const fetchReportes = () => {
     setLoading(true);
 
-    const data = {...materia}
-    data.profesor = data.profesor.id
-    data.programa = data.programa.clave
+    try {
+      const options = {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-type": "application/json",
+        },
+      };
+
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/reportes/${materiaNrc}`;
+      fetch(url, options)
+        .then((response) => response.json())
+        .then((data) => {
+          setReportes(data);
+        })
+        .then(() => setLoading(false))
+        .catch((error) => {
+          console.log(
+            `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/reportes`,
+            error
+          );
+        });
+    } catch (error) {}
+  };
+
+  const updateTemas = () => {
+    setLoading(true);
+
+    const data = { ...materia };
+    data.profesor = data.profesor.id;
+    data.programa = data.programa.clave;
 
     try {
       const options = {
@@ -191,22 +309,19 @@ const CheckboxTree = ({ route, navigation }) => {
           Accept: "application/json",
           "Content-type": "application/json",
         },
-        body: JSON.stringify({...data, temas: JSON.stringify(tree)})
+        body: JSON.stringify({ ...data, temas: JSON.stringify(tree) }),
       };
-
-      console.log(JSON.stringify({...data, temas: JSON.stringify(tree)}));
-      
 
       const url = `${process.env.EXPO_PUBLIC_API_URL}/materias/update`;
       fetch(url, options)
         .then((response) => {
-          if(response.status !== 200) {
-            Alert.alert('Error', `Ocurrió un error inesperado`, [
+          if (response.status !== 200) {
+            Alert.alert("Error", `Ocurrió un error inesperado`, [
               {
-                "text": "Ok",
-                "style": "cancel"
-              }
-            ])
+                text: "Ok",
+                style: "cancel",
+              },
+            ]);
           }
         })
         .then(() => setLoading(false))
@@ -217,24 +332,82 @@ const CheckboxTree = ({ route, navigation }) => {
           );
         });
     } catch (error) {}
-  }
+  };
 
   useEffect(() => {
-    fetchMateria()
-  }, [])
+    fetchReportes();
+    fetchMateria();
+  }, []);
 
-  const [firstFetch, setFirstFetch] = useState(true)
-  
+  const [firstFetch, setFirstFetch] = useState(true);
+
   useEffect(() => {
-    if(materia){
-      if(firstFetch){
+    if (materia) {
+      if (firstFetch) {
         setFirstFetch(false);
-      }else{
-        updateTemas()
+      } else {
+        updateTemas();
       }
     }
-  }, [tree])
-  
+  }, [tree]);
+
+  const uploadFile = async (file, tema) => {
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("file", {
+      uri: file.uri,
+      type: "application/pdf",
+      name: file.name,
+    });
+    formData.append("tema", tema);
+    formData.append("materia", materiaNrc);
+
+    const url = `${process.env.EXPO_PUBLIC_API_URL}/reportes/upload`;
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        fetchReportes();
+      } else {
+        console.error("Failed to upload file", result);
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Error uploading file", error);
+      return error;
+    }
+  };
+
+  const selectFile = async (tema) => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+      });
+
+      if (!result.canceled) {
+        const resultPdf = await uploadFile(result.assets[0], tema);
+        if (resultPdf.ok) {
+          Toast.show({
+            type: ALERT_TYPE.SUCCESS,
+            title: "PDF subido con éxito",
+            textBody: `El reporte del tema ${tema} se ha subido con éxito!`,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Error selecting file", err);
+    }
+  };
 
   return (
     <View style={{ ...style.general.overlay_top }}>
@@ -253,23 +426,47 @@ const CheckboxTree = ({ route, navigation }) => {
           shadowRadius: 5,
         }}
       >
-        {materia &&
-        <View style={{justifyContent: 'top', alignItems: 'center', width: '100%'}}>
-          <Text style={{width: 'auto', fontSize: 24, marginTop: 20}}>Reportar</Text>
-          <Text style={{width: 'auto', fontSize: 20, marginTop: 20}}>{materia.programa.nombre}</Text>
-          <Text style={{width: 'auto', fontSize: 16, marginTop: 25}}>NRC: {materia.nrc}</Text>
-          <View style={{flexDirection: 'row', width: '70%', justifyContent: 'space-around'}}>
-          <Text style={{width: 'auto', fontSize: 14, marginTop: 15}}>Clave: {materia.programa.clave}</Text>
-          <Text style={{width: 'auto', fontSize: 14, marginTop: 15}}>{getDateFormat24(materia.hora_inicio)} - {getDateFormat24(materia.hora_final)}</Text>
-          <Text style={{width: 'auto', fontSize: 14, marginTop: 15}}>Aula: {materia.edificio}-{materia.aula}</Text>
-
+        {materia && (
+          <View
+            style={{
+              justifyContent: "top",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <Text style={{ width: "auto", fontSize: 24, marginTop: 20 }}>
+              Reportar
+            </Text>
+            <Text style={{ width: "auto", fontSize: 20, marginTop: 20 }}>
+              {materia.programa.nombre}
+            </Text>
+            <Text style={{ width: "auto", fontSize: 16, marginTop: 25 }}>
+              NRC: {materia.nrc}
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                width: "70%",
+                justifyContent: "space-around",
+              }}
+            >
+              <Text style={{ width: "auto", fontSize: 14, marginTop: 15 }}>
+                Clave: {materia.programa.clave}
+              </Text>
+              <Text style={{ width: "auto", fontSize: 14, marginTop: 15 }}>
+                {getDateFormat24(materia.hora_inicio)} -{" "}
+                {getDateFormat24(materia.hora_final)}
+              </Text>
+              <Text style={{ width: "auto", fontSize: 14, marginTop: 15 }}>
+                Aula: {materia.edificio}-{materia.aula}
+              </Text>
+            </View>
           </View>
-        </View>
-        }
+        )}
       </View>
       <View style={{ padding: 20, paddingVertical: 30, width: "100%" }}>
         <View style={styles.container}>
-          <ScrollView style={{ maxHeight: 300 }}>{renderTree(tree)}</ScrollView>
+          <ScrollView style={{ maxHeight: 370 }}>{renderTree(tree)}</ScrollView>
           <TouchableOpacity
             onPress={() => {
               setTypeOfSub("tema");
@@ -338,28 +535,8 @@ const CheckboxTree = ({ route, navigation }) => {
             </Modal>
           </Portal>
         </View>
-        <View style={{paddingTop: 20}}>
-        <Button
-          mode="elevated"
-          icon={() => <Icon name="file" color="black" size={22} />}
-          contentStyle={{ flexDirection: "row-reverse" }}
-          style={{
-            ...style.general.button,
-            ...style.general.center,
-            marginHorizontal: 'auto',
-            backgroundColor: theme.colors.tertiary,
-            marginTop: 0,
-            width: 'auto'
-          }}
-          onPressIn={() => navigation.navigate("ModReportes", {materiaNrc: materiaNrc})}
-        >
-          <Text style={{paddingHorizontal: 10, fontSize: 15}}>
-            Crear reporte
-          </Text>
-        </Button>
-        </View>
       </View>
-      
+
       {loading && (
         <View style={style.general.overlay_loader}>
           <ActivityIndicator size={"large"} color={"#4DBFE4"} />
@@ -372,7 +549,6 @@ const CheckboxTree = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-
     backgroundColor: theme.colors.secondary_op,
     borderRadius: 10,
     width: "95%",

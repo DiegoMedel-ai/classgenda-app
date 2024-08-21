@@ -54,7 +54,7 @@ const CircularProgressBar = ({ percentage }) => {
           strokeLinecap="round"
           transform={`rotate(-90 80 80)`}
         />
-        <Text style={styles.percentageText}>{`${percentage}%`}</Text>
+        <Text style={styles.percentageText}>{`${percentage.toFixed(0)}%`}</Text>
       </Svg>
       <Text style={styles.labelText}>Porcentaje de completado</Text>
     </View>

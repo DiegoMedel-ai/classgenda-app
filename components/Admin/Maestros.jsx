@@ -230,7 +230,7 @@ export default function MaestrosAdmin({ navigation }) {
                     <Text>
                       {(selectedItem &&
                         `${selectedItem.nombre} ${selectedItem.apellido}`) ||
-                        "Selecciona un alumno"}
+                        "Selecciona un maestro"}
                     </Text>
                   </View>
                 );
@@ -697,6 +697,7 @@ export default function MaestrosAdmin({ navigation }) {
                         alumnoId: alumnoSelected.id,
                       })
                     }
+                    disabled={alumnoSelected.rol === 4}
                   >
                     Horario
                   </Button>
@@ -776,7 +777,7 @@ export default function MaestrosAdmin({ navigation }) {
             <View style={{ alignItems: "center" }}>
               <IconFeather name="check-circle" color="green" size={40} />
               <Text style={{ textAlign: "center", marginTop: 10 }}>
-                Alumno {update ? "modificado" : "agregado"} correctamente!
+                Maestro {update ? "modificado" : "agregado"} correctamente!
               </Text>
             </View>
           ) : (

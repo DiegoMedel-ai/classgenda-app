@@ -45,19 +45,19 @@ function DrawerAdmin(props) {
       label: "Inicio",
       icon: "house",
       route: "Home",
-      condition: true,
+      condition: !user.rol?.includes('profesor'),
     },
     {
       label: "Horario",
       icon: "calendar",
-      route: "Horario",
+      route: "Home",
       condition: user.rol?.includes('profesor') || user.rol?.includes('estudiante')
     },
     {
       label: "Alumnos",
       icon: "user-group",
       route: "Alumnos",
-      condition: user.rol?.includes('admin') || user.rol?.includes('jefe_academia')
+      condition: user.rol?.includes('admin')
     },
     {
       label: "Maestros",

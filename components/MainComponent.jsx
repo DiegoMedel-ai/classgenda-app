@@ -6,8 +6,10 @@ import AuthNav from '@/components/navigation/AuthNav'
 import useUser from "@/hooks/useUser";
 import AdminNav from "@/components/navigation/AdminNav";
 import MaestroNav from "./navigation/MaestroNav";
+import JefeAcademiaNav from "./navigation/JefeAcademiaNav";
 import { RefreshControl, ScrollView, View } from "react-native";
 import LoginContext from "@/constants/loginContext";
+import { AlertNotificationRoot } from "react-native-alert-notification";
 
 function MainComponent() {
   const { user, setUser, getUser } = useUser()
@@ -22,6 +24,10 @@ function MainComponent() {
     {
       rol: 'profesor',
       component: <MaestroNav />,
+    },
+    {
+      rol: 'jefe_academia',
+      component: <JefeAcademiaNav />,
     }
   ];
 
@@ -43,9 +49,11 @@ function MainComponent() {
 
   return (
     <LoginContext.Provider value={{ setUser, getUser, user }}>
+      <AlertNotificationRoot theme="dark" toastConfig={{autoClose: true}}>
         <NavigationContainer>
           {flagUser ? (user ? navRol.find((x) => x.rol === user.rol)?.component || <View></View> : <AuthNav />) : <View></View>}
         </NavigationContainer>
+      </AlertNotificationRoot>
     </LoginContext.Provider>
   );
 }

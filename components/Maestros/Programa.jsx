@@ -1,30 +1,18 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { styles } from "@/constants/styles";
 import theme from "@/constants/theme";
 import {
-  Button,
-  IconButton,
   Text,
-  HelperText,
-  Modal,
-  Portal,
 } from "react-native-paper";
 import {
   View,
   ActivityIndicator,
   ScrollView,
   TextInput,
-  Alert,
-  Dimensions,
 } from "react-native";
-import SelectDropdown from "react-native-select-dropdown";
-import Icon from "react-native-vector-icons/FontAwesome6";
-import IconFeather from "react-native-vector-icons/Feather";
-import { Formik } from "formik";
-import { programaSchema } from "@/constants/schemas";
 
 export default function ProgramaDetails({ route }) {
-  const { materiaNrc } = route.params;
+  const { materiaNrc, programaClave } = route.params;
   const [loading, setLoading] = useState(false);
   const [values, setValues] = useState();
   const [editable, setEditable] = useState(false);
@@ -42,7 +30,7 @@ export default function ProgramaDetails({ route }) {
         },
       };
 
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/programas/${materiaNrc}`;
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/programas/${programaClave}`;
       fetch(url, options)
         .then((response) => response.json())
         .then((data) => {
@@ -142,6 +130,7 @@ export default function ProgramaDetails({ route }) {
                 style={{ ...styles.general.button_input }}
                 editable={editable || !update}
                 value={values?.tipo}
+                multiline
               />
             </View>
             <View
@@ -179,6 +168,12 @@ export default function ProgramaDetails({ route }) {
               }}
             >
               <Text>UA de pre-requisito</Text>
+              <TextInput
+                style={{ ...styles.general.button_input }}
+                editable={editable || !update}
+                value={values?.requisito_programa?.nombre}
+                multiline
+              />
             </View>
             <View
               style={{
@@ -189,6 +184,12 @@ export default function ProgramaDetails({ route }) {
               }}
             >
               <Text>UA en simultaneo</Text>
+              <TextInput
+                style={{ ...styles.general.button_input }}
+                editable={editable || !update}
+                value={values?.simultaneo_programa?.nombre}
+                multiline
+              />
             </View>
           </View>
           <View

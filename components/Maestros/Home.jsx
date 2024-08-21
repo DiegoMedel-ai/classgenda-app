@@ -121,7 +121,7 @@ const HomeMaestro = ({ route, navigation }) => {
                   borderRadius: 50,
                   backgroundColor: theme.colors.tertiary_op,
                 }}
-                onPressIn={() => navigation.navigate("Materia", { materiaNrc: item.nrc })}
+                onPressIn={() => navigation.navigate("Materia", { materiaNrc: item.nrc, programaClave: item.programa?.clave })}
               >
                 <Icon name="list" color={"black"} size={20} />
               </Pressable>

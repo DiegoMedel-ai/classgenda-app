@@ -7,11 +7,11 @@ import Icon from "react-native-vector-icons/FontAwesome6";
 import CircularProgressBar from "../CircularProgress";
 import { useIsFocused } from "@react-navigation/native";
 
-const Reportes = ({ route, navigation }) => {
+const OptionsMateria = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false)
   const [percentage, setPercentage] = useState(0)
   const isFocused = useIsFocused();
-  const { materiaNrc } = route.params;
+  const { materiaNrc, maestroId } = route.params;
 
   function calculatePercentageOfOnes(data) {
     // Función recursiva para contar los valores de 1 y el total de elementos
@@ -89,7 +89,7 @@ const Reportes = ({ route, navigation }) => {
         style={{
           height: 220,
           width: "100%",
-          backgroundColor: theme.colors.secondary_op,
+          backgroundColor: theme.colors.primary_op,
           borderBottomLeftRadius: 40,
           borderBottomRightRadius: 40,
           flexDirection: "row",
@@ -110,25 +110,25 @@ const Reportes = ({ route, navigation }) => {
           padding: 30,
         }}
       >
-        <Text style={{ fontSize: 25 }}>Gestión</Text>
+        <Text style={{ fontSize: 25 }}>Opciones</Text>
         <Button
           mode="elevated"
-          icon={() => <Icon name="pencil" color="black" size={32} />}
+          icon={() => <Icon name="user" color="black" size={32} />}
           contentStyle={{ flexDirection: "row-reverse" }}
           style={{
             ...styles.general.button,
             ...styles.general.center,
             marginHorizontal: 'auto',
-            minWidth: '85%',
+            minWidth: '90%',
             backgroundColor: theme.colors.tertiary,
             paddingVertical: 10,
             borderRadius: 40,
             height: 82,
           }}
-          onPressIn={() => navigation.navigate("ModReportes", {materiaNrc: materiaNrc})}
+          onPressIn={() => navigation.navigate("ProfesorDetails", {maestroId: maestroId})}
         >
           <Text style={{ fontSize: 24, paddingHorizontal: 10, paddingVertical: 5 }}>
-            Crear reporte
+            Info del profesor
           </Text>
         </Button>
         <Button
@@ -139,7 +139,7 @@ const Reportes = ({ route, navigation }) => {
             ...styles.general.button,
             ...styles.general.center,
             marginHorizontal: 'auto',
-            minWidth: '85%',
+            minWidth: '90%',
             backgroundColor: theme.colors.secondary,
             paddingVertical: 10,
             borderRadius: 40,
@@ -161,4 +161,4 @@ const Reportes = ({ route, navigation }) => {
   );
 };
 
-export default Reportes;
+export default OptionsMateria;
