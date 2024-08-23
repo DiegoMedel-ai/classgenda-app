@@ -31,7 +31,7 @@ export default function ProfesorDetails({ route }) {
         },
       };
 
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/users/getProfesor/${maestroId}`;
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/users/getAllInfo/${maestroId}`;
       fetch(url, options)
         .then((response) => response.json())
         .then((data) => {
@@ -40,7 +40,7 @@ export default function ProfesorDetails({ route }) {
         .then(() => setLoading(false))
         .catch((error) => {
           console.log(
-            `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/users/getProfesor/${maestroId}`,
+            `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/users/getAllInfo/${maestroId}`,
             error
           );
         });

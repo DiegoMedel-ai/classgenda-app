@@ -10,6 +10,8 @@ import ViewReportes from "../Maestros/ViewReportes";
 import ViewListAlumnos from "../Maestros/ViewListAlumnos";
 import DrawerAdmin from "./DrawerAdmin";
 import theme from "@/constants/theme";
+import OptionsPerfil from "../OptionsPerfil";
+import ConfigPerfil from "../ConfiguracionPerfil";
 import { styles } from "@/constants/styles";
 import { Text } from "react-native-paper";
 import LoginContext from "@/constants/loginContext"
@@ -129,6 +131,35 @@ function HomeStack() {
             }
         }}
       />
+      
+      <Stack.Screen
+          name="OptionsPerfil"
+          component={OptionsPerfil}
+          options={{
+            headerShown: false
+          }}
+          listeners={{
+            focus: () => {
+              setHeaderColor(theme.colors.primary);
+              setShownDrawerHeader(true);
+            },
+          }}
+        />
+        <Stack.Screen
+          name="ConfigPerfil"
+          component={ConfigPerfil}
+          options={{
+            headerStyle: { backgroundColor: headerColor },
+            headerTitle: "",
+          }}
+          initialParams={{ userId: user.id }}
+          listeners={{
+            focus: () => {
+              setHeaderColor(theme.colors.primary);
+              setShownDrawerHeader(false);
+            },
+          }}
+        />
     </Stack.Navigator>
   );
 }

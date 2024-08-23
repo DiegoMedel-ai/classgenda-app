@@ -95,7 +95,7 @@ const ListMaterias = ({ route, navigation }) => {
               {getDateFormat24(item.hora_inicio)} -{" "}
               {getDateFormat24(item.hora_final)}
             </Text>
-            <Text style={{ fontSize: isSelected ? 13 : 10 }}>
+            <Text style={{ fontSize: isSelected ? 13 : 10, maxWidth: 120 }}>
               Prof: {item.profesor?.nombre}{" "}
               {item.profesor?.apellido}
             </Text>

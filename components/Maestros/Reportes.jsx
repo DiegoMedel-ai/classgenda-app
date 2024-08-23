@@ -14,21 +14,17 @@ const Reportes = ({ route, navigation }) => {
   const { materiaNrc } = route.params;
 
   function calculatePercentageOfOnes(data) {
-    // Función recursiva para contar los valores de 1 y el total de elementos
     function countValues(obj) {
-      let count = 0; // Contador de valores que son 1
-      let total = 0; // Contador total de elementos
+      let count = 0;
+      let total = 0;
   
-      // Iterar sobre las claves del objeto
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
-          // Contar el valor actual
           total++;
           if (obj[key].value === 1) {
             count++;
           }
   
-          // Contar los valores en los subtemas
           if (obj[key].subtemas && Object.keys(obj[key].subtemas).length > 0) {
             const result = countValues(obj[key].subtemas);
             count += result.count;
@@ -42,7 +38,7 @@ const Reportes = ({ route, navigation }) => {
   
     const { count, total } = countValues(data);
   
-    if (total === 0) return 0; // Evitar división por cero
+    if (total === 0) return 0;
     return (count / total) * 100;
   }
 

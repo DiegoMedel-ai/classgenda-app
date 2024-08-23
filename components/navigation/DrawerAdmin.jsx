@@ -9,7 +9,7 @@ import { styles } from "@/constants/styles";
 import theme from "@/constants/theme";
 
 function DrawerAdmin(props) {
-  const { user, getUser } = useContext(LoginContext);
+  const { user, getUser, profileImage, setProfileImage } = useContext(LoginContext);
 
   const [userInfo, setUserInfo] = useState({nombre: '', foto_url: ''})
 
@@ -26,6 +26,7 @@ function DrawerAdmin(props) {
       fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/show`, options)
       .then((response) => response.json())
       .then((data) => {
+        setProfileImage(data.foto_url)
         setUserInfo(data)
       })
       .catch((error) => {
@@ -51,7 +52,13 @@ function DrawerAdmin(props) {
       label: "Horario",
       icon: "calendar",
       route: "Home",
-      condition: user.rol?.includes('profesor') || user.rol?.includes('estudiante')
+      condition: user.rol?.includes('profesor')
+    },
+    {
+      label: "Horario",
+      icon: "calendar",
+      route: "Horario",
+      condition: user.rol?.includes('estudiante')
     },
     {
       label: "Alumnos",
@@ -77,6 +84,12 @@ function DrawerAdmin(props) {
       route: "Programas",
       condition: user.rol?.includes('admin')
     },
+    {
+      label: "Malla curricular",
+      icon: "table",
+      route: "Malla",
+      condition: user.rol?.includes('estudiante')
+    },
   ]
 
   return (
@@ -96,7 +109,12 @@ function DrawerAdmin(props) {
         >
           <View style={{ padding: 20 }}>
             <Image
-              source={require("@/assets/images/user.png")}
+              source={
+                profileImage
+                  ? {
+                      uri: `${process.env.EXPO_PUBLIC_STORAGE_IMAGE_URL}/img/${profileImage}`,
+                    }
+                  : require("@/assets/images/user.png")}
               style={styles.drawer.profileImage}
             />
             <Chip style={{marginVertical: 5, alignSelf: 'flex-start', backgroundColor: theme.colors.secondary }}>{userInfo.nombre}</Chip>
@@ -124,6 +142,7 @@ function DrawerAdmin(props) {
       </View>
 
       <View style={styles.drawer.bottomDrawerSection}>
+        {(user.rol?.includes('estudiante') || user.rol?.includes('profesor')) &&
         <Drawer.Item
           icon={({ color, size }) => (
             <View style={{ width: 30, alignItems: 'center' }}>
@@ -131,8 +150,9 @@ function DrawerAdmin(props) {
             </View>
           )}
           label="Configuración"
-          onPress={() => props.navigation.navigate("Configuración")}
+          onPress={() => props.navigation.navigate("OptionsPerfil")}
         />
+        }
         <Drawer.Item
           icon={({ color, size }) => (
             <View style={{ width: 30, alignItems: 'center' }}>
