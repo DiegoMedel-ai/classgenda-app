@@ -1,26 +1,19 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { styles } from "@/constants/styles";
 import theme from "@/constants/theme";
 import {
-  Button,
-  IconButton,
   Text,
-  HelperText,
-  Modal,
-  Portal,
 } from "react-native-paper";
 import {
   View,
   ActivityIndicator,
   ScrollView,
   TextInput,
-  Alert,
 } from "react-native";
 import SelectDropdown from "react-native-select-dropdown";
 import Icon from "react-native-vector-icons/FontAwesome6";
-import IconFeather from "react-native-vector-icons/Feather";
 import { Formik } from "formik";
-import { programaSchema } from "@/constants/schemas";
+import { getTemaData } from "../../hooks/uids";
 
 export default function ViewProgramas() {
   const initPrograma = {
@@ -35,17 +28,11 @@ export default function ViewProgramas() {
     descripcion: "",
     perfil_egreso: "",
   };
-  const [materias, setMaterias] = useState([]);
   const [programas, setProgramas] = useState([]);
-  const [profesores, setProfesores] = useState([]);
   const [loading, setLoading] = useState(false);
   const [programaSelected, setProgramaSelected] = useState(initPrograma);
   const [editable, setEditable] = useState(false);
   const [update, setUpdate] = useState(true);
-  const [visibleModal, setVisibleModal] = useState(false);
-  const [successResult, setSuccessResult] = useState(false);
-  const [openInitHour, setOpenInitHour] = useState(false);
-  const [openFinalHour, setOpenFinalHour] = useState(false);
   const select = useRef();
   const selectRequisito = useRef();
   const selectSimultaneo = useRef();
@@ -86,21 +73,75 @@ export default function ViewProgramas() {
 
   useEffect(() => {
     try {
-        selectRequisito.current?.selectIndex(
-          programas.findIndex((x) => x.clave === programaSelected?.requisito) + 1
-        );
-        selectSimultaneo.current?.selectIndex(
-          programas.findIndex((x) => x.clave === programaSelected?.simultaneo) + 1
-        );
+      selectRequisito.current?.selectIndex(
+        programas.findIndex((x) => x.clave === programaSelected?.requisito) + 1
+      );
+      selectSimultaneo.current?.selectIndex(
+        programas.findIndex((x) => x.clave === programaSelected?.simultaneo) + 1
+      );
+
+      setUids(JSON.parse(programaSelected?.temas));
     } catch (error) {
-        console.log(error);
-        
+      console.log(error);
     }
   }, [programaSelected]);
 
   useEffect(() => {
     setProgramaSelected(initPrograma);
   }, [update]);
+
+  /**
+   * Section to render tree of subjects
+   */
+  const [uids, setUids] = useState([]);
+
+  /**
+   * Function to sort the tree of uids by the number of subject
+   * @param {String} a
+   * @param {String} b
+   * @returns String[]
+   */
+  const sortTree = (a, b) => {
+    const matchA = getTemaData(a);
+    const matchB = getTemaData(b);
+
+    if (matchA && matchB) {
+      const numA = matchA[1].split(".").map(Number);
+      const numB = matchB[1].split(".").map(Number);
+
+      for (let i = 0; i < Math.max(numA.length, numB.length); i++) {
+        const valA = numA[i] || 0;
+        const valB = numB[i] || 0;
+
+        if (valA !== valB) {
+          return valA - valB;
+        }
+      }
+    }
+    return 0;
+  };
+
+  /**
+   * Function to render the array of uids
+   * @returns View to render the uids
+   */
+  const renderTree = () => {
+    return uids.sort(sortTree).map((uid) => {
+      const _paddingLeft = getTemaData(uid)[1].split(".").length * 15;
+      return (
+        <View key={uid} style={{ paddingLeft: _paddingLeft }}>
+          <View style={styles.programas.checkboxRow}>
+            <Text
+              style={{ ...(!editable && { marginBottom: 15 }), fontSize: 15 }}
+            >
+              {getTemaData(uid)[1]}. {getTemaData(uid)[2]} -{" "}
+              {getTemaData(uid)[4]} h
+            </Text>
+          </View>
+        </View>
+      );
+    });
+  };
 
   return (
     <View
@@ -260,6 +301,8 @@ export default function ViewProgramas() {
                         editable={editable || !update}
                         onChangeText={handleChange("tipo")}
                         value={values?.tipo}
+                        multiline
+                        numberOfLines={2}
                       />
                     </View>
                     <View
@@ -523,6 +566,13 @@ export default function ViewProgramas() {
                         value={values?.perfil_egreso}
                       />
                     </View>
+                  </View>
+                  <View
+                    style={{ ...styles.programas.container, marginBottom: 20 }}
+                  >
+                    <ScrollView style={{ maxHeight: "auto" }}>
+                      {renderTree(uids)}
+                    </ScrollView>
                   </View>
                 </ScrollView>
               </>

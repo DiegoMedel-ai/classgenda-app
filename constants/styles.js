@@ -182,7 +182,18 @@ const styles = {
       alignItems: 'center',
       backgroundColor: theme.colors.primary,
       marginTop: 20,
-    }
+    },
+    container: {
+      padding: 20,
+      backgroundColor: theme.colors.secondary_op,
+      borderRadius: 10,
+      width: "90%",
+      marginHorizontal: "auto",
+    },
+    checkboxRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
   },
   horario: {
     touchable: {

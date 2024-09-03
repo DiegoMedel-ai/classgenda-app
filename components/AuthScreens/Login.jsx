@@ -148,7 +148,7 @@ const Login = ({ navigation }) => {
               width: "100%",
             }}
           >
-            <Button
+            {/* <Button
               mode="contained"
               style={styles.login.buttons}
               onPress={() => navigation.navigate("Login")}
@@ -161,7 +161,7 @@ const Login = ({ navigation }) => {
               >
                 Forgot password?
               </Text>
-            </Button>
+            </Button> */}
             <Button
               mode="contained"
               style={styles.login.buttons}

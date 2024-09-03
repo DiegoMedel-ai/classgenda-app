@@ -5,7 +5,7 @@ import { Button, Text } from "react-native-paper";
 import { useEffect } from "react";
 import Icon from "react-native-vector-icons/FontAwesome6";
 
-const HomeJefeAcademia = ({ navigation }) => {
+const HomePresidenteAcademia = ({ navigation }) => {
   return (
     <View style={{ ...styles.general.overlay_top }}>
       <View
@@ -145,4 +145,4 @@ const HomeJefeAcademia = ({ navigation }) => {
   );
 };
 
-export default HomeJefeAcademia;
+export default HomePresidenteAcademia;

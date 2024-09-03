@@ -3,7 +3,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import HomeAlumnos from "../Alumnos/Home";
 import OptionsPrograma from "../Alumnos/OptionsPrograma";
-import ProfesorDetails from "../JefeAcademia/InfoProfesor";
+import ProfesorDetails from "../PresidenteAcademia/InfoProfesor";
 import ProgramaDetails from "../Maestros/Programa";
 import HorarioAlumno from "../Alumnos/Horario";
 import MallaCurricular from "../Alumnos/MallaCurricular";

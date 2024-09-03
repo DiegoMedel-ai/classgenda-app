@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useState } from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import HomeJefeAcademia from "../JefeAcademia/Home";
-import OptionsPrograma from "../JefeAcademia/OptionsPrograma";
-import ViewProgramas from "../JefeAcademia/ViewPrograma";
-import EditProgramas from "../JefeAcademia/EditPrograma";
-import ListProgramas from "../JefeAcademia/ListProgramas";
-import ListMaterias from "../JefeAcademia/ListMaterias";
-import OptionsMateria from "../JefeAcademia/OptionsMateria";
-import ProfesorDetails from "../JefeAcademia/InfoProfesor";
-import ListProfesores from "../JefeAcademia/ListProfesores";
+import HomePresidenteAcademia from "../PresidenteAcademia/Home";
+import OptionsPrograma from "../PresidenteAcademia/OptionsPrograma";
+import ViewProgramas from "../PresidenteAcademia/ViewPrograma";
+import EditProgramas from "../PresidenteAcademia/EditPrograma";
+import ListProgramas from "../PresidenteAcademia/ListProgramas";
+import ListMaterias from "../PresidenteAcademia/ListMaterias";
+import OptionsMateria from "../PresidenteAcademia/OptionsMateria";
+import ProfesorDetails from "../PresidenteAcademia/InfoProfesor";
+import ListProfesores from "../PresidenteAcademia/ListProfesores";
 import ViewReportes from "../Maestros/ViewReportes";
 import DrawerAdmin from "./DrawerAdmin";
 import theme from "@/constants/theme";
@@ -29,7 +29,7 @@ function HomeStack() {
     <Stack.Navigator>
       <Stack.Screen
         name="Home"
-        component={HomeJefeAcademia}
+        component={HomePresidenteAcademia}
         options={{
           headerShown: false,
         }}
@@ -174,7 +174,7 @@ function HomeStack() {
   );
 }
 
-export default function JefeAcademiaNav() {
+export default function PresidenteAcademiaNav() {
   const [headerColor, setHeaderColor] = useState(theme.colors.primary);
   const [shownDrawerHeader, setShownDrawerHeader] = useState(true);
 

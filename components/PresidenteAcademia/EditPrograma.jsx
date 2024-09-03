@@ -1,22 +1,28 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { styles } from "@/constants/styles";
 import theme from "@/constants/theme";
 import {
   Button,
-  IconButton,
   Text,
   HelperText,
   Modal,
   Portal,
 } from "react-native-paper";
-import { View, ActivityIndicator, ScrollView, TextInput, Alert } from "react-native";
+import {
+  View,
+  ActivityIndicator,
+  ScrollView,
+  TextInput,
+  Alert,
+} from "react-native";
 import SelectDropdown from "react-native-select-dropdown";
 import Icon from "react-native-vector-icons/FontAwesome6";
 import IconFeather from "react-native-vector-icons/Feather";
 import { Formik } from "formik";
 import { programaSchema } from "@/constants/schemas";
+import { getTemaData, generateUID } from "../../hooks/uids";
 
-export default function EditProgramas({navigation}) {
+export default function EditProgramas({ navigation }) {
   const initPrograma = {
     clave: 0,
     nombre: "",
@@ -29,17 +35,13 @@ export default function EditProgramas({navigation}) {
     descripcion: "",
     perfil_egreso: "",
   };
-  const [materias, setMaterias] = useState([]);
   const [programas, setProgramas] = useState([]);
-  const [profesores, setProfesores] = useState([]);
   const [loading, setLoading] = useState(false);
   const [programaSelected, setProgramaSelected] = useState(initPrograma);
   const [editable, setEditable] = useState(true);
   const [update, setUpdate] = useState(true);
   const [visibleModal, setVisibleModal] = useState(false);
   const [successResult, setSuccessResult] = useState(false);
-  const [openInitHour, setOpenInitHour] = useState(false);
-  const [openFinalHour, setOpenFinalHour] = useState(false);
   const select = useRef();
   const selectRequisito = useRef();
   const selectSimultaneo = useRef();
@@ -110,59 +112,16 @@ export default function EditProgramas({navigation}) {
     } catch (error) {}
   };
 
-  const deleteFun = () => {
-    setLoading(true);
-
-    try {
-      const options = {
-        method: "GET",
-        headers: {
-          "Content-type": "application/json",
-        },
-      };
-
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/programas/delete/${programaSelected.clave}`;
-
-      fetch(url, options)
-        .then((response) => {
-          if (response.status === 200) {
-            Alert.alert(
-              "Programa eliminado",
-              "Se ha eliminado el registro correctamente",
-              [
-                {
-                  text: "Ok",
-                  style: "cancel",
-                  onPress: () => fetchProgramas(),
-                },
-              ]
-            );
-          } else {
-            Alert.alert("Error", "Se tienen relacionadas materias a este programa por lo que no se puede eliminar", [
-              {
-                text: "Ok",
-                style: "cancel",
-                onPress: setLoading(false)
-              },
-            ]);
-          }
-        })
-        .catch((error) => {
-          console.log(`Fetch error to: ${url}`, error);
-        });
-    } catch (error) {}
-  };
-
   useEffect(() => {
     fetchProgramas();
   }, []);
 
-  useEffect(() => {    
+  useEffect(() => {
     selectRequisito.current?.selectIndex(
-      programas.findIndex((x) => x.clave === programaSelected?.requisito)+1
+      programas.findIndex((x) => x.clave === programaSelected?.requisito) + 1
     );
     selectSimultaneo.current?.selectIndex(
-      programas.findIndex((x) => x.clave === programaSelected?.simultaneo)+1
+      programas.findIndex((x) => x.clave === programaSelected?.simultaneo) + 1
     );
   }, [programaSelected]);
 
@@ -172,89 +131,89 @@ export default function EditProgramas({navigation}) {
 
   return (
     <View
-    style={{ ...styles.admin.overlay_top, flex: 1, position: "relative" }}
-  >
-    <View
-      style={{
-        height: 220,
-        width: "100%",
-        backgroundColor: theme.colors.tertiary_op,
-        borderBottomLeftRadius: 40,
-        borderBottomRightRadius: 40,
-        flexDirection: "row",
-        elevation: 5,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        marginBottom: 20,
-        position: "absolute",
-      }}
-    ></View>
+      style={{ ...styles.admin.overlay_top, flex: 1, position: "relative" }}
+    >
+      <View
+        style={{
+          height: 220,
+          width: "100%",
+          backgroundColor: theme.colors.tertiary_op,
+          borderBottomLeftRadius: 40,
+          borderBottomRightRadius: 40,
+          flexDirection: "row",
+          elevation: 5,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.3,
+          shadowRadius: 5,
+          marginBottom: 20,
+          position: "absolute",
+        }}
+      ></View>
       {update && (
         <SelectDropdown
-        data={programas}
-        ref={select}
-        renderButton={(selectedItem, isOpen) => {
-          return (
+          data={programas}
+          ref={select}
+          renderButton={(selectedItem, isOpen) => {
+            return (
+              <View
+                style={{
+                  minHeight: 50,
+                  backgroundColor: theme.colors.secondary,
+                  borderRadius: 10,
+                  position: "relative",
+                  justifyContent: "center",
+                  alignItems: "flex-start",
+                  marginVertical: 25,
+                  elevation: 5,
+                  width: "70%",
+                }}
+              >
+                <Text style={{ fontSize: 18, paddingHorizontal: 15 }}>
+                  {(selectedItem &&
+                    `${selectedItem.clave} - ${selectedItem.nombre}`) ||
+                    "Selecciona un programa"}
+                </Text>
+                <Icon
+                  name="chevron-down"
+                  size={18}
+                  color={"black"}
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                    height: 48,
+                    textAlignVertical: "center",
+                  }}
+                />
+              </View>
+            );
+          }}
+          renderItem={(item, index, isSelected) => (
             <View
               style={{
-                minHeight: 50,
-                backgroundColor: theme.colors.secondary,
-                borderRadius: 10,
-                position: "relative",
-                justifyContent: "center",
-                alignItems: "flex-start",
-                marginVertical: 25,
-                elevation: 5,
-                width: "70%",
+                ...styles.general.center,
+                ...(isSelected && {
+                  backgroundColor: theme.colors.tertiary_op,
+                }),
+                paddingVertical: 10,
               }}
             >
-              <Text style={{ fontSize: 18, paddingHorizontal: 15 }}>
-                {(selectedItem &&
-                  `${selectedItem.clave} - ${selectedItem.nombre}`) ||
-                  "Selecciona un programa"}
+              <Text>
+                {item.clave} - {item.nombre}
               </Text>
-              <Icon
-                name="chevron-down"
-                size={18}
-                color={"black"}
-                style={{
-                  position: "absolute",
-                  right: 10,
-                  height: 48,
-                  textAlignVertical: "center",
-                }}
-              />
             </View>
-          );
-        }}
-        renderItem={(item, index, isSelected) => (
-          <View
-            style={{
-              ...styles.general.center,
-              ...(isSelected && {
-                backgroundColor: theme.colors.tertiary_op,
-              }),
-              paddingVertical: 10,
-            }}
-          >
-            <Text>
-              {item.clave} - {item.nombre}
-            </Text>
-          </View>
-        )}
-        onSelect={(item) => setProgramaSelected(item)}
-        defaultValue={programaSelected}
-        search
-        dropdownStyle={{ borderRadius: 10 }}
-        searchInputTxtColor={"black"}
-        searchPlaceHolder={"Search here"}
-        searchPlaceHolderColor={"grey"}
-        renderSearchInputLeftIcon={() => {
-          return <Icon name={"magnifying-glass"} color={"black"} size={18} />;
-        }}
-      />
+          )}
+          onSelect={(item) => setProgramaSelected(item)}
+          defaultValue={programaSelected}
+          search
+          dropdownStyle={{ borderRadius: 10 }}
+          searchInputTxtColor={"black"}
+          searchPlaceHolder={"Search here"}
+          searchPlaceHolderColor={"grey"}
+          renderSearchInputLeftIcon={() => {
+            return <Icon name={"magnifying-glass"} color={"black"} size={18} />;
+          }}
+        />
       )}
       {(programaSelected.clave !== 0 || !update) && (
         <Formik
@@ -329,6 +288,8 @@ export default function EditProgramas({navigation}) {
                         editable={editable || !update}
                         onChangeText={handleChange("tipo")}
                         value={values?.tipo}
+                        multiline
+                        numberOfLines={2}
                       />
                     </View>
                     <View
@@ -434,9 +395,9 @@ export default function EditProgramas({navigation}) {
                       <Text>UA en simultaneo</Text>
                       <SelectDropdown
                         data={[
-                            { clave: null, nombre: "Ninguna" },
-                            ...programas,
-                          ]}
+                          { clave: null, nombre: "Ninguna" },
+                          ...programas,
+                        ]}
                         disabled={!editable && update}
                         ref={selectSimultaneo}
                         renderButton={(selectedItem, isOpen) => {
@@ -547,7 +508,12 @@ export default function EditProgramas({navigation}) {
                     >
                       <Text>Descripcion de la asignatura</Text>
                       <TextInput
-                        style={{ ...styles.general.button_input, textAlignVertical: 'top', textAlign: 'left', padding: 10 }}
+                        style={{
+                          ...styles.general.button_input,
+                          textAlignVertical: "top",
+                          textAlign: "left",
+                          padding: 10,
+                        }}
                         editable={editable || !update}
                         multiline
                         numberOfLines={8}
@@ -562,7 +528,7 @@ export default function EditProgramas({navigation}) {
                       width: "100%",
                       flexDirection: "row",
                       justifyContent: "space-evenly",
-                      paddingBottom: 20
+                      paddingBottom: 20,
                     }}
                   >
                     <View
@@ -574,7 +540,12 @@ export default function EditProgramas({navigation}) {
                     >
                       <Text>Perfil de egreso del alumno</Text>
                       <TextInput
-                        style={{ ...styles.general.button_input, textAlignVertical: 'top', textAlign: 'left', padding: 10 }}
+                        style={{
+                          ...styles.general.button_input,
+                          textAlignVertical: "top",
+                          textAlign: "left",
+                          padding: 10,
+                        }}
                         editable={editable || !update}
                         multiline
                         numberOfLines={8}
@@ -584,33 +555,33 @@ export default function EditProgramas({navigation}) {
                     </View>
                   </View>
                 </ScrollView>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-evenly",
-                      width: "100%",
-                      paddingTop: 10,
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-evenly",
+                    width: "100%",
+                    paddingTop: 10,
+                  }}
+                >
+                  <Button
+                    mode="elevated"
+                    textColor="black"
+                    buttonColor={theme.colors.tertiary}
+                    onPress={() => {
+                      handleSubmit();
                     }}
                   >
-                    <Button
-                      mode="elevated"
-                      textColor="black"
-                      buttonColor={theme.colors.tertiary}
-                      onPress={() => {
-                        handleSubmit();
-                      }}
-                    >
-                      {editable ? "Guardar" : "Actualizar"}
-                    </Button>
-                    <Button
-                      mode="elevated"
-                      textColor="black"
-                      buttonColor={theme.colors.secondary}
-                      onPress={() => navigation.goBack()}
-                    >
-                      Cancelar
-                    </Button>
-                  </View>
+                    {editable ? "Guardar" : "Actualizar"}
+                  </Button>
+                  <Button
+                    mode="elevated"
+                    textColor="black"
+                    buttonColor={theme.colors.secondary}
+                    onPress={() => navigation.goBack()}
+                  >
+                    Cancelar
+                  </Button>
+                </View>
 
                 <HelperText
                   type="error"

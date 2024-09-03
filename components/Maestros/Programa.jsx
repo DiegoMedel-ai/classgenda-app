@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { styles } from "@/constants/styles";
 import theme from "@/constants/theme";
-import {
-  Text,
-} from "react-native-paper";
-import {
-  View,
-  ActivityIndicator,
-  ScrollView,
-  TextInput,
-} from "react-native";
+import { Text } from "react-native-paper";
+import { View, ActivityIndicator, ScrollView, TextInput } from "react-native";
+import { getTemaData } from "../../hooks/uids";
 
 export default function ProgramaDetails({ route }) {
   const { materiaNrc, programaClave } = route.params;
@@ -34,6 +28,7 @@ export default function ProgramaDetails({ route }) {
       fetch(url, options)
         .then((response) => response.json())
         .then((data) => {
+          setUids(JSON.parse(data?.temas))
           setValues(data);
         })
         .then(() => setLoading(false))
@@ -50,14 +45,66 @@ export default function ProgramaDetails({ route }) {
     fetchPrograma();
   }, []);
 
+  /**
+   * Section to render tree of subjects
+   */
+  const [uids, setUids] = useState([]);
+
+  /**
+   * Function to sort the tree of uids by the number of subject
+   * @param {String} a
+   * @param {String} b
+   * @returns String[]
+   */
+  const sortTree = (a, b) => {
+    const matchA = getTemaData(a);
+    const matchB = getTemaData(b);
+
+    if (matchA && matchB) {
+      const numA = matchA[1].split(".").map(Number);
+      const numB = matchB[1].split(".").map(Number);
+
+      for (let i = 0; i < Math.max(numA.length, numB.length); i++) {
+        const valA = numA[i] || 0;
+        const valB = numB[i] || 0;
+
+        if (valA !== valB) {
+          return valA - valB;
+        }
+      }
+    }
+    return 0;
+  };
+
+  /**
+   * Function to render the array of uids
+   * @returns View to render the uids
+   */
+  const renderTree = () => {
+    return uids.sort(sortTree).map((uid) => {
+      const _paddingLeft = getTemaData(uid)[1].split(".").length * 15;
+      return (
+        <View key={uid} style={{ paddingLeft: _paddingLeft }}>
+          <View style={styles.programas.checkboxRow}>
+            <Text
+              style={{ ...(!editable && { marginBottom: 15 }), fontSize: 15 }}
+            >
+              {getTemaData(uid)[1]}. {getTemaData(uid)[2]} -{" "}
+              {getTemaData(uid)[4]} h
+            </Text>
+          </View>
+        </View>
+      );
+    });
+  };
+
   return (
-    <View style={{ flex: 1, position: 'relative' }}>
+    <View style={{ flex: 1, position: "relative" }}>
       {values && (
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start' }}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-start" }}
         >
-            
-            <View
+          <View
             style={{
               height: 220,
               width: "100%",
@@ -70,13 +117,20 @@ export default function ProgramaDetails({ route }) {
               shadowOffset: { width: 0, height: 5 },
               shadowOpacity: 0.3,
               shadowRadius: 5,
-              marginBottom: 20, 
-              position: 'absolute'
+              marginBottom: 20,
+              position: "absolute",
             }}
           ></View>
-        <Text style={{width: '100%', textAlign: 'center', paddingVertical: 20, fontSize: 24}}>
+          <Text
+            style={{
+              width: "100%",
+              textAlign: "center",
+              paddingVertical: 20,
+              fontSize: 24,
+            }}
+          >
             Programa
-        </Text>
+          </Text>
           <View style={{ ...styles.general.center, width: "100%" }}>
             <View
               style={{
@@ -131,6 +185,7 @@ export default function ProgramaDetails({ route }) {
                 editable={editable || !update}
                 value={values?.tipo}
                 multiline
+                numberOfLines={2}
               />
             </View>
             <View
@@ -291,6 +346,11 @@ export default function ProgramaDetails({ route }) {
                 value={values?.perfil_egreso}
               />
             </View>
+          </View>
+          <View style={{...styles.programas.container, marginBottom: 20}}>
+            <ScrollView style={{ maxHeight: "auto" }}>
+              {renderTree(uids)}
+            </ScrollView>
           </View>
         </ScrollView>
       )}

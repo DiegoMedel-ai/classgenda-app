@@ -6,7 +6,7 @@ import AuthNav from "@/components/navigation/AuthNav";
 import useUser from "@/hooks/useUser";
 import AdminNav from "@/components/navigation/AdminNav";
 import MaestroNav from "./navigation/MaestroNav";
-import JefeAcademiaNav from "./navigation/JefeAcademiaNav";
+import PresidenteAcademiaNav from "./navigation/PresidenteAcademiaNav";
 import AlumnoNav from "./navigation/AlumnoNav";
 import { RefreshControl, ScrollView, View } from "react-native";
 import LoginContext from "@/constants/loginContext";
@@ -28,21 +28,14 @@ function MainComponent() {
       component: <MaestroNav />,
     },
     {
-      rol: "jefe_academia",
-      component: <JefeAcademiaNav />,
+      rol: "presidente_academia",
+      component: <PresidenteAcademiaNav />,
     },
     {
       rol: "estudiante",
       component: <AlumnoNav />,
     },
   ];
-
-  const onRefresh = useCallback(() => {
-    setRefresh(true);
-    setTimeout(() => {
-      setRefresh(false);
-    }, 2000);
-  }, []);
 
   useEffect(() => {
     const checkUser = async () => {
