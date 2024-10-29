@@ -16,40 +16,37 @@ import { getDateFormat24 } from "@/hooks/date";
 import Icon from "react-native-vector-icons/Feather";
 import IconF6 from "react-native-vector-icons/FontAwesome6";
 import { styles } from "@/constants/styles";
+import useUids from "../../hooks/uids";
 
 export default function HomeAlumnos({ route, navigation }) {
   const { alumnoId } = route.params;
+  const { getTemaData } = useUids();
   const [loading, setLoading] = useState(false);
   const [inscripciones, setInscripciones] = useState([]);
   const [inscripcionesShow, setInscripcionesShow] = useState([]);
 
-  function calculatePercentageOfOnes(data) {
-    function countValues(obj) {
-      let count = 0;
-      let total = 0;
+  function calculatePercentage(uids = []) {
+    var hoursCompleted = 0;
+    var hoursTotal = 0;
+    
+    if(uids.length > 0){
 
-      for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          total++;
-          if (obj[key].value === 1) {
-            count++;
-          }
-
-          if (obj[key].subtemas && Object.keys(obj[key].subtemas).length > 0) {
-            const result = countValues(obj[key].subtemas);
-            count += result.count;
-            total += result.total;
-          }
+      uids.forEach(uid => {
+        const [ , level, name, value, hours] = getTemaData(uid);
+        
+        hoursTotal += Number.parseInt(hours);
+  
+        if(Number.parseInt(value) === 2){
+          hoursCompleted += Number.parseInt(hours);
         }
-      }
-
-      return { count, total };
+      });
+      const percentage = (hoursCompleted * 100) / hoursTotal;
+      
+      return percentage;
+    } else {
+      return 0;
     }
 
-    const { count, total } = countValues(data);
-
-    if (total === 0) return 0;
-    return (count / total) * 100;
   }
 
   const fetchInscripciones = () => {
@@ -68,13 +65,31 @@ export default function HomeAlumnos({ route, navigation }) {
       options
     )
       .then((response) => response.json())
-      .then((_data) => {
-        const data = _data.filter(
-          (item) =>
-            calculatePercentageOfOnes(JSON.parse(item.materia.temas)) !== 100
+      .then(async (_data) => {
+        const dataWithReportes = await Promise.all(
+          _data.map(async (item) => {
+            const response = await fetch(
+              `${process.env.EXPO_PUBLIC_API_URL}/reportes/${item.materia.nrc}`,
+              options
+            );
+            
+            const reportes = await response.json();
+            const lastReporte = reportes[reportes.length - 1];
+            
+            if (lastReporte) {
+              const temas = JSON.parse(lastReporte.temas || '[]');
+              const progreso = calculatePercentage(temas);
+              console.log(progreso);
+              return { ...item, progreso }; 
+            }
+  
+            return item;
+          })
         );
+        const filteredData = dataWithReportes.filter((item) => item.progreso !== 100);
+  
         setInscripciones(_data);
-        setInscripcionesShow(data);
+        setInscripcionesShow(filteredData);
       })
       .catch((error) => {
         console.log(
@@ -157,9 +172,7 @@ export default function HomeAlumnos({ route, navigation }) {
                     }}
                   >
                     <Text style={{ padding: 5, fontSize: 12 }}>
-                      {calculatePercentageOfOnes(
-                        JSON.parse(item.materia?.temas)
-                      ).toFixed(0)}
+                      {item.progreso?.toFixed(0) || 0}
                       %
                     </Text>
                   </View>

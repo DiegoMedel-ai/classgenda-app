@@ -44,6 +44,7 @@ const Login = ({ navigation }) => {
         try {
           await AsyncStorage.setItem('user:id', data.user.id.toString());
           await AsyncStorage.setItem('user:rol', data.user.rol);
+          await AsyncStorage.setItem('user:departamentos', JSON.stringify(data.user.departamentos));
           
           getUser();
         } catch (error) {

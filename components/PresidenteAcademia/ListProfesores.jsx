@@ -1,58 +1,34 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import { styles } from "@/constants/styles";
 import theme from "@/constants/theme";
 import {
-  Button,
-  IconButton,
   Text,
-  HelperText,
-  Modal,
-  Portal,
 } from "react-native-paper";
 import {
   View,
   ActivityIndicator,
   ScrollView,
-  TextInput,
-  Alert,
   Image,
-  Pressable,
   TouchableOpacity,
 } from "react-native";
 import SelectDropdown from "react-native-select-dropdown";
 import Icon from "react-native-vector-icons/FontAwesome6";
-import IconFeather from "react-native-vector-icons/Feather";
-import { Formik } from "formik";
-import { programaSchema } from "@/constants/schemas";
+import LoginContext from "@/constants/loginContext";
 
 export default function ListProfesores({navigation}) {
-  const initPrograma = {
-    clave: 0,
-    nombre: "",
-    tipo: "",
-    creditos: null,
-    requisito: null,
-    simultaneo: null,
-    horas_practica: null,
-    horas_curso: null,
-    descripcion: "",
-    perfil_egreso: "",
-  };
-  const [materias, setMaterias] = useState([]);
+  const { user } = useContext(LoginContext);
   const [programas, setProgramas] = useState([]);
   const [profesores, setProfesores] = useState([]);
   const [loading, setLoading] = useState(false);
   const [programaSelected, setProgramaSelected] = useState();
-  const [editable, setEditable] = useState(false);
-  const [update, setUpdate] = useState(true);
-  const [visibleModal, setVisibleModal] = useState(false);
-  const [successResult, setSuccessResult] = useState(false);
-  const [openInitHour, setOpenInitHour] = useState(false);
-  const [openFinalHour, setOpenFinalHour] = useState(false);
   const select = useRef();
-  const selectRequisito = useRef();
-  const selectSimultaneo = useRef();
 
+  
+  /**
+   * Obtiene todos los programas desde el servidor y actualiza el estado `programas`.
+   *
+   * @param {boolean} [loadingS=false] Indica si la carga ya está en curso.
+   */
   const fetchProgramas = (loadingS = false) => {
     if (!loadingS) {
       setLoading(true);
@@ -71,7 +47,7 @@ export default function ListProfesores({navigation}) {
       fetch(`${process.env.EXPO_PUBLIC_API_URL}/programas`, options)
         .then((response) => response.json())
         .then((data) => {
-          setProgramas(data);
+          setProgramas(data.filter(x => JSON.parse(user.departamentos).includes(x.departamento)));
         })
         .then(() => setLoading(false))
         .catch((error) => {

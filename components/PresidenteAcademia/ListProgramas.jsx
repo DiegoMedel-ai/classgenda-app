@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback, useContext } from "react";
 import {
   View,
   Pressable,
@@ -6,22 +6,20 @@ import {
   FlatList,
   ScrollView,
   RefreshControl,
+  TouchableOpacity
 } from "react-native";
 import { Text } from "react-native-paper";
 import Icon from "react-native-vector-icons/FontAwesome6";
 import { getDateFormat24, isTimeBetween, getWeekDay } from "@/hooks/date";
 import { styles } from "@/constants/styles";
 import theme from "@/constants/theme";
+import LoginContext from "@/constants/loginContext";
 
 const ListProgramas = ({ route, navigation }) => {
-  const currDay = new Date().getDay();
-  const [selectedDay, setSelectedDay] = useState(
-    currDay === 0 || currDay === 6 ? 0 : currDay - 1
-  );
+  const { user } = useContext(LoginContext);
   const [loading, setLoading] = useState(false);
   const [programas, setProgramas] = useState([]);
   const [selectedId, setSelectedId] = useState(0);
-  const [inscripcionesShow, setInscripcionesShow] = useState([]);
   const [refresh, setRefresh] = useState(false);
 
   const onRefresh = useCallback(() => {
@@ -99,7 +97,9 @@ const ListProgramas = ({ route, navigation }) => {
       <>
         <Item
           item={item}
-          onPress={() => setSelectedId(item.clave)}
+          onPress={() => {
+            setSelectedId(item.clave)}
+          }
           isSelected={isSelected}
           backgroundColor={backgroundColor}
           width={width}
@@ -125,7 +125,7 @@ const ListProgramas = ({ route, navigation }) => {
     )
       .then((response) => response.json())
       .then((data) => {
-        setProgramas(data);
+        setProgramas(data.filter(x => JSON.parse(user.departamentos).includes(x.departamento)));
       })
       .catch((error) => {
         console.log(

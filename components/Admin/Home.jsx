@@ -24,6 +24,12 @@ const data = [
   { icon: "code", text: "Programas", image: programasImg },
 ];
 
+/**
+ * Pantalla principal de los usuarios 'admin' para poder visualizar las opciones de administracion que maneja este rol con un carrusel para visualizaras.
+ *
+ * @param {NavigationProp} navigation Parametro heredado para manejar la navegacion de la aplicación
+ * @returns {JSX.Element}
+ */
 const HomeAdmin = ({ navigation }) => {
   const [indexCarousel, setIndexCarousel] = useState(0);
   const refCarousel = useRef();
@@ -31,12 +37,11 @@ const HomeAdmin = ({ navigation }) => {
   const width = Dimensions.get("window").width;
   const height = Dimensions.get("window").height;
 
-  const userNav = ( page ) => {
-      try {
-        navigation.navigate(page);
+  const userNav = (page) => {
+    try {
+      navigation.navigate(page);
     } catch (error) {
-        console.log(error);
-        
+      console.log(error);
     }
   };
 
@@ -46,50 +51,52 @@ const HomeAdmin = ({ navigation }) => {
         <Carousel
           width={width}
           height={height * 0.65}
-          style={{...styles.admin.carousel, width: width, height: '100%'}}
+          style={{ ...styles.admin.carousel, width: width, height: "100%" }}
           data={data}
           ref={refCarouselImg}
           renderItem={({ index, item, animationValue }) => (
-            <View style={{...styles.general.center}}>
-                <Image source={item.image} style={styles.admin.image} />
-                <Text style={{...styles.general.drawer_title, marginTop: 20}}>{item.text}</Text>
+            <View style={{ ...styles.general.center }}>
+              <Image source={item.image} style={styles.admin.image} />
+              <Text style={{ ...styles.general.drawer_title, marginTop: 20 }}>
+                {item.text}
+              </Text>
             </View>
           )}
         />
       </View>
-        <Carousel
-          width={100}
-          height={60}
-          style={{...styles.admin.carousel, width: width}}
-          data={data}
-          ref={refCarousel}
-          onSnapToItem={(index) => {
-            refCarouselImg.current?.scrollTo({
-                index: index,
-                animated: true
-            })
-            setIndexCarousel(index)
-          }}
-          renderItem={({ index, item, animationValue }) => (
-            <Item
-              animationValue={animationValue}
-              item={item}
-              onPress={() => {
-                refCarousel.current?.scrollTo({
-                  count: animationValue.value,
-                  animated: true,
-                });
-                refCarouselImg.current?.scrollTo({
-                  count: animationValue.value,
-                  animated: true,
-                });
-                if (index === indexCarousel) {
-                  userNav(item.text);
-                }
-              }}
-            />
-          )}
-        />
+      <Carousel
+        width={100}
+        height={60}
+        style={{ ...styles.admin.carousel, width: width }}
+        data={data}
+        ref={refCarousel}
+        onSnapToItem={(index) => {
+          refCarouselImg.current?.scrollTo({
+            index: index,
+            animated: true,
+          });
+          setIndexCarousel(index);
+        }}
+        renderItem={({ index, item, animationValue }) => (
+          <Item
+            animationValue={animationValue}
+            item={item}
+            onPress={() => {
+              refCarousel.current?.scrollTo({
+                count: animationValue.value,
+                animated: true,
+              });
+              refCarouselImg.current?.scrollTo({
+                count: animationValue.value,
+                animated: true,
+              });
+              if (index === indexCarousel) {
+                userNav(item.text);
+              }
+            }}
+          />
+        )}
+      />
     </View>
   );
 };

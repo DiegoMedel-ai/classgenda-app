@@ -20,15 +20,15 @@ import SelectDropdown from "react-native-select-dropdown";
 import Icon from "react-native-vector-icons/FontAwesome6";
 import IconFeather from "react-native-vector-icons/Feather";
 import { Formik } from "formik";
-import { alumnoSchema } from "@/constants/schemas";
+import { maestroSchema } from "@/constants/schemas";
 import DatePicker from "react-native-date-picker";
 import { adjustTimeZone, getDateFormat, setDateTimeZone } from "@/hooks/date";
 import WeekdaySelector from "@/components/WeekDaySelect";
 
 export default function MaestrosAdmin({ navigation }) {
-  const initAlumno = {
+  const initMaestro = {
     id: 0,
-    rol: 2,
+    rol: 3,
     correo: "",
     telefono: "",
     nombre: "",
@@ -62,10 +62,11 @@ export default function MaestrosAdmin({ navigation }) {
   ];
 
   const centros = ["CUCEI", "CUCS"];
-
   const [profesores, setProfesores] = useState([]);
+  const [departamentos, setDepartamentos] = useState([]);
+  const [academias, setAcademias] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [alumnoSelected, setAlumnoSelected] = useState(initAlumno);
+  const [maestroSelected, setMaestroSelected] = useState(initMaestro);
   const [editable, setEditable] = useState(false);
   const [update, setUpdate] = useState(true);
   const [visibleModal, setVisibleModal] = useState(false);
@@ -74,11 +75,18 @@ export default function MaestrosAdmin({ navigation }) {
   const selectCarrera = useRef();
   const selectCentro = useRef();
   const selectSituacion = useRef();
+  const selectAcademia = useRef();
+  const selectDepartamento = useRef();
 
-  const fetchAlumnos = (loadingS = false) => {
+  /**
+   * Funcion para obtener la lista de informacion de los maestros.
+   * 
+   * @param {Boolean} loadingS Variable para saber si ya está cargando el loader o no
+   */
+  const fetchMaestros = (loadingS = false) => {
     if (!loadingS) {
       setLoading(true);
-      setAlumnoSelected(initAlumno);
+      setMaestroSelected(initMaestro);
       select.current?.reset();
     }
     try {
@@ -105,9 +113,51 @@ export default function MaestrosAdmin({ navigation }) {
     } catch (error) {}
   };
 
-  const updateFun = (values) => {
+  /**
+   * Funcion para obtener la lista de todos los departamentos.
+   */
+  const fetchDepartamentosAcademias = () => {
     setLoading(true);
 
+    try {
+      const options = {
+        method: "GET",
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+
+      const urlDepartamentos = `${process.env.EXPO_PUBLIC_API_URL}/departamentos`;
+      const urlAcademias = `${process.env.EXPO_PUBLIC_API_URL}/academias`;
+
+      fetch(urlDepartamentos, options)
+        .then((response) => response.json())
+        .then((data) => {
+          setDepartamentos(data)
+        })
+        .catch((error) => {
+          console.log(`Fetch error to: ${urlDepartamentos}`, error);
+        });
+        
+      fetch(urlAcademias, options)
+      .then((response) => response.json())
+      .then((data) => {
+        setAcademias(data)
+      })
+      .catch((error) => {
+        console.log(`Fetch error to: ${urlAcademias}`, error);
+      });
+    } catch (error) {}
+  }
+
+  /**
+   * Funcion para modificar los datos actuales del profesor.
+   * 
+   * @param {Object} values Valores del formulario Formik con los datos del profesor. 
+   */
+  const updateFun = (values) => {
+    setLoading(true);
+    
     try {
       const options = {
         method: "POST",
@@ -130,7 +180,7 @@ export default function MaestrosAdmin({ navigation }) {
             setTimeout(() => {
               setSuccessResult(true);
               setVisibleModal(false);
-              fetchAlumnos(true);
+              fetchMaestros(true);
               setUpdate(true);
             }, 800);
           }
@@ -141,6 +191,9 @@ export default function MaestrosAdmin({ navigation }) {
     } catch (error) {}
   };
 
+  /**
+   * Funcion para borrar del registro cualquier profesor seleccionado.
+   */
   const deleteFun = () => {
     setLoading(true);
 
@@ -152,7 +205,7 @@ export default function MaestrosAdmin({ navigation }) {
         },
       };
 
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/users/delete/${alumnoSelected.id}`;
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/users/delete/${maestroSelected.id}`;
 
       fetch(url, options)
         .then((response) => {
@@ -164,7 +217,7 @@ export default function MaestrosAdmin({ navigation }) {
                 {
                   text: "Ok",
                   style: "cancel",
-                  onPress: () => fetchAlumnos(),
+                  onPress: () => fetchMaestros(),
                 },
               ]
             );
@@ -183,24 +236,40 @@ export default function MaestrosAdmin({ navigation }) {
     } catch (error) {}
   };
 
+  /**
+   * Ejecuta primeramente la funcion para poder obtener toda la informacion de los profesores, departamentos y academias.
+   */
   useEffect(() => {
-    fetchAlumnos();
+    fetchMaestros();
+    fetchDepartamentosAcademias();
   }, []);
 
+  /**
+   * Cambia el estado de todos los selects para mostrar la informacion precisa de cada profesor.
+   */
   useEffect(() => {
     selectCarrera.current?.selectIndex(
-      carreras.findIndex((x) => x === alumnoSelected?.carrera)
+      carreras.findIndex((x) => x === maestroSelected?.carrera)
     );
     selectCentro.current?.selectIndex(
-      centros.findIndex((x) => x === alumnoSelected?.centro)
+      centros.findIndex((x) => x === maestroSelected?.centro)
     );
     selectSituacion.current?.selectIndex(
-      situaciones.findIndex((x) => x.id === alumnoSelected?.situacion)
+      situaciones.findIndex((x) => x.id === maestroSelected?.situacion) 
     );
-  }, [alumnoSelected]);
+    selectAcademia.current?.selectIndex(
+      academias.findIndex((x) => x.id === maestroSelected?.academia) 
+    );
+    selectDepartamento.current?.selectIndex(
+      departamentos.findIndex((x) => x.id === maestroSelected?.departamento) 
+    );
+  }, [maestroSelected]);
 
+  /**
+   * Reinicia el formulario a valores iniciales cuando la funcion de update cambia.
+   */
   useEffect(() => {
-    setAlumnoSelected(initAlumno);
+    setMaestroSelected(initMaestro);
   }, [update]);
 
   return (
@@ -250,8 +319,8 @@ export default function MaestrosAdmin({ navigation }) {
                   </Text>
                 </View>
               )}
-              onSelect={(item) => setAlumnoSelected(item)}
-              defaultValue={alumnoSelected}
+              onSelect={(item) => setMaestroSelected(item)}
+              defaultValue={maestroSelected}
               search
               dropdownStyle={{ borderRadius: 10 }}
               searchInputTxtColor={"black"}
@@ -268,16 +337,16 @@ export default function MaestrosAdmin({ navigation }) {
               icon={() => <Icon name={"repeat"} size={15} />}
               size={20}
               mode="contained"
-              onPress={() => fetchAlumnos(false)}
+              onPress={() => fetchMaestros(false)}
               style={{ backgroundColor: theme.colors.tertiary }}
             />
           </View>
         </View>
       )}
-      {(alumnoSelected.id !== 0 || !update) && (
+      {(maestroSelected.id !== 0 || !update) && (
         <Formik
-          initialValues={alumnoSelected}
-          validationSchema={alumnoSchema}
+          initialValues={maestroSelected}
+          validationSchema={maestroSchema}
           onSubmit={(values) => updateFun(values)}
           enableReinitialize={true}
         >
@@ -313,6 +382,7 @@ export default function MaestrosAdmin({ navigation }) {
                         Info del alumno
                       </Text>
                     </View>
+
                     <View style={{ ...styles.general.center, width: "97%" }}>
                       <View
                         style={{
@@ -342,6 +412,7 @@ export default function MaestrosAdmin({ navigation }) {
                         />
                       </View>
                     </View>
+
                     <View style={{ ...styles.general.center, width: "97%" }}>
                       <View
                         style={{
@@ -371,6 +442,7 @@ export default function MaestrosAdmin({ navigation }) {
                         />
                       </View>
                     </View>
+
                     <View style={{ ...styles.general.center, width: "97%" }}>
                       <View
                         style={{
@@ -400,6 +472,7 @@ export default function MaestrosAdmin({ navigation }) {
                         />
                       </View>
                     </View>
+
                     <View style={{ ...styles.general.center, width: "97%" }}>
                       <View
                         style={{
@@ -429,6 +502,7 @@ export default function MaestrosAdmin({ navigation }) {
                         />
                       </View>
                     </View>
+
                     <View style={{ ...styles.general.center, width: "97%" }}>
                       <View
                         style={{
@@ -459,6 +533,7 @@ export default function MaestrosAdmin({ navigation }) {
                         />
                       </View>
                     </View>
+
                     <View style={{ ...styles.general.center, width: "97%" }}>
                       <View
                         style={{
@@ -528,6 +603,7 @@ export default function MaestrosAdmin({ navigation }) {
                         />
                       </View>
                     </View>
+
                     <View style={{ ...styles.general.center, width: "97%" }}>
                       <View
                         style={{
@@ -597,11 +673,11 @@ export default function MaestrosAdmin({ navigation }) {
                         />
                       </View>
                     </View>
+
                     <View
                       style={{
                         ...styles.general.center,
                         width: "97%",
-                        marginBottom: 20,
                       }}
                     >
                       <View
@@ -677,6 +753,172 @@ export default function MaestrosAdmin({ navigation }) {
                         />
                       </View>
                     </View>
+
+                    {(maestroSelected.rol === 4 && academias.length > 0) &&
+                    <View
+                      style={{
+                        ...styles.general.center,
+                        width: "97%",
+                        marginBottom: 20,
+                      }}
+                    >
+                      <View
+                        style={{
+                          marginTop: 20,
+                          flexDirection: "row",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            paddingHorizontal: 10,
+                            textAlignVertical: "center",
+                            width: "30%",
+                          }}
+                        >
+                          Academia:
+                        </Text>
+                        <SelectDropdown
+                          data={academias}
+                          disabled={!editable && update}
+                          ref={selectAcademia}
+                          renderButton={(selectedItem, isOpen) => {
+                            return (
+                              <View
+                                style={{
+                                  ...styles.general.button_input,
+                                  width: "65%",
+                                  marginVertical: "auto",
+                                  marginTop: 0,
+                                  paddingVertical: 5,
+                                }}
+                              >
+                                <Text>
+                                  {(selectedItem &&
+                                    `${selectedItem.academia}`) ||
+                                    "Ninguna"}
+                                </Text>
+                              </View>
+                            );
+                          }}
+                          renderItem={(item, index, isSelected) => (
+                            <View
+                              style={{
+                                ...styles.general.center,
+                                ...(isSelected && {
+                                  backgroundColor: theme.colors.tertiary_op,
+                                }),
+                                paddingVertical: 10,
+                              }}
+                            >
+                              <Text>
+                                {item.academia}
+                              </Text>
+                            </View>
+                          )}
+                          onSelect={(item) =>
+                            setFieldValue("academia", item.id)
+                          }
+                          search
+                          dropdownStyle={{ borderRadius: 10 }}
+                          searchInputTxtColor={"black"}
+                          searchPlaceHolder={"Search here"}
+                          searchPlaceHolderColor={"grey"}
+                          renderSearchInputLeftIcon={() => {
+                            return (
+                              <Icon
+                                name={"magnifying-glass"}
+                                color={"black"}
+                                size={18}
+                              />
+                            );
+                          }}
+                        />
+                      </View>
+                    </View>
+                    }
+                    
+                    {(maestroSelected.rol === 5 && departamentos.length > 0) &&
+                    <View
+                      style={{
+                        ...styles.general.center,
+                        width: "97%",
+                        marginBottom: 20,
+                      }}
+                    >
+                      <View
+                        style={{
+                          marginTop: 20,
+                          flexDirection: "row",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            paddingHorizontal: 10,
+                            textAlignVertical: "center",
+                            width: "30%",
+                          }}
+                        >
+                          Departamento:
+                        </Text>
+                        <SelectDropdown
+                          data={departamentos}
+                          disabled={!editable && update}
+                          ref={selectDepartamento}
+                          renderButton={(selectedItem, isOpen) => {
+                            return (
+                              <View
+                                style={{
+                                  ...styles.general.button_input,
+                                  width: "65%",
+                                  marginVertical: "auto",
+                                  marginTop: 0,
+                                  paddingVertical: 5,
+                                }}
+                              >
+                                <Text>
+                                  {(selectedItem &&
+                                    `${selectedItem.departamento}`) ||
+                                    "Ninguno"}
+                                </Text>
+                              </View>
+                            );
+                          }}
+                          renderItem={(item, index, isSelected) => (
+                            <View
+                              style={{
+                                ...styles.general.center,
+                                ...(isSelected && {
+                                  backgroundColor: theme.colors.tertiary_op,
+                                }),
+                                paddingVertical: 10,
+                              }}
+                            >
+                              <Text>
+                                {item.departamento}
+                              </Text>
+                            </View>
+                          )}
+                          onSelect={(item) =>
+                            setFieldValue("departamento", item.id)
+                          }
+                          search
+                          dropdownStyle={{ borderRadius: 10 }}
+                          searchInputTxtColor={"black"}
+                          searchPlaceHolder={"Search here"}
+                          searchPlaceHolderColor={"grey"}
+                          renderSearchInputLeftIcon={() => {
+                            return (
+                              <Icon
+                                name={"magnifying-glass"}
+                                color={"black"}
+                                size={18}
+                              />
+                            );
+                          }}
+                        />
+                      </View>
+                    </View>
+                    }
                   </View>
                 </ScrollView>
                 <View
@@ -689,15 +931,15 @@ export default function MaestrosAdmin({ navigation }) {
                 >
                   <Button
                     mode="elevated"
-                    style={{ ...(!alumnoSelected && { marginTop: 10 }) }}
+                    style={{ ...(!maestroSelected && { marginTop: 10 }) }}
                     textColor="black"
                     buttonColor={theme.colors.tertiary}
                     onPress={() =>
                       navigation.navigate("Horario", {
-                        alumnoId: alumnoSelected.id,
+                        alumnoId: maestroSelected.id,
                       })
                     }
-                    disabled={alumnoSelected.rol === 4}
+                    disabled={maestroSelected.rol === 4}
                   >
                     Horario
                   </Button>

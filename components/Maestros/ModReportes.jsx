@@ -1,118 +1,47 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   StyleSheet,
   Alert,
-  TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Pressable,
 } from "react-native";
 import { styles as style } from "@/constants/styles";
 import theme from "@/constants/theme";
 import Icon from "react-native-vector-icons/FontAwesome6";
 import { getDateFormat24 } from "@/hooks/date";
-import {
-  Checkbox,
-  Text,
-  Modal,
-  Portal,
-  TextInput as Input,
-  Button,
-} from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 import * as DocumentPicker from "expo-document-picker";
 import { ALERT_TYPE, Toast } from "react-native-alert-notification";
 import { Linking } from "react-native";
+import useUids from "../../hooks/uids";
+import SelectDropdown from "react-native-select-dropdown";
+import { TouchableOpacity } from "react-native";
 
 const CheckboxTree = ({ route, navigation }) => {
   const { materiaNrc } = route.params;
-  const [visibleModal, setVisibleModal] = useState(false);
-  const [subtitleToAdd, setSubtitleToAdd] = useState();
   const [reportes, setReportes] = useState([]);
-  const [newPathRef, setNewPathRef] = useState([]);
-  const [nameToAdd, setNameToAdd] = useState("");
-  const [typeOfSub, setTypeOfSub] = useState("tema");
-  const [tree, setTree] = useState({});
   const [materia, setMateria] = useState();
   const [loading, setLoading] = useState(false);
+  const [newWeek, setNewWeek] = useState();
+  const [selectedReport, setSelectedReport] = useState();
+  const selectWeek = useRef();
 
-  const handleCheckboxChange = (path) => {
-    const updatedTree = { ...tree };
-    let current = updatedTree;
+  const {
+    setCheckableTree,
+    checkableTree,
+    renderTree,
+    setUids,
+    uids,
+    newReport,
+    setNewReport,
+  } = useUids();
 
-    path.forEach((key, index) => {
-      if (index === path.length - 1) {
-        if (current[key]) {
-          current[key].value = current[key].value === 1 ? 0 : 1;
-        }
-      } else {
-        if (current[key] && current[key].subtemas) {
-          current = current[key].subtemas;
-        }
-      }
-    });
-
-    setTree(updatedTree);
-  };
-
-  const handleAddSubtema = (path) => {
-    const updatedTree = { ...tree };
-    let current = updatedTree;
-
-    path.forEach((key, index) => {
-      if (index === path.length - 1) {
-        const subtemaCount = Object.keys(current[key].subtemas).length + 1;
-        const parentKey = key.split("_")[0];
-        const newSubtema = `${parentKey}.${subtemaCount}_${nameToAdd}`;
-        current[key].subtemas[newSubtema] = { value: 0, subtemas: {} };
-      } else {
-        if (!current[key]) {
-          current[key] = { value: 0, subtemas: {} };
-        }
-        current = current[key].subtemas;
-      }
-    });
-
-    setVisibleModal(false);
-    setTree(updatedTree);
-  };
-
-  const getNewCount = (path) => {
-    const updatedTree = { ...tree };
-    let current = updatedTree;
-
-    if (!path) {
-      setSubtitleToAdd(Object.keys(current).length + 1);
-      setVisibleModal(true);
-    } else {
-      path.forEach((key, index) => {
-        if (index === path.length - 1) {
-          const subtemaCount = Object.keys(current[key].subtemas).length + 1;
-          const parentKey = key.split("_")[0];
-          const newSubtema = `${parentKey}.${subtemaCount}`;
-          setSubtitleToAdd(newSubtema);
-          setNewPathRef(path);
-          setVisibleModal(true);
-        } else {
-          if (!current[key]) {
-            current[key] = { value: 0, subtemas: {} };
-          }
-          current = current[key].subtemas;
-        }
-      });
-    }
-  };
-
-  const handleAddTema = () => {
-    const updatedTree = { ...tree };
-    let current = updatedTree;
-
-    const temaCount = Object.keys(current).length + 1;
-    current[`${temaCount}_${nameToAdd}`] = { value: 0, subtemas: {} };
-
-    setVisibleModal(false);
-    setTree(updatedTree);
-  };
-
+  /**
+   * Funcion para abrir el pdf en el navegador del usuario
+   * @param {String} pdf_url Url del pdf del reporte ligado a la semana
+   */
   const openPDF = async (pdf_url) => {
     try {
       const supported = await Linking.canOpenURL(pdf_url);
@@ -135,109 +64,9 @@ const CheckboxTree = ({ route, navigation }) => {
     }
   };
 
-  const renderTree = (node, path = []) => {
-    return Object.keys(node).map((key) => {
-      const newPath = [...path, key];
-      return (
-        <View key={newPath.join("_")} style={{ paddingLeft: path.length * 20 }}>
-          <View style={styles.checkboxRow}>
-            <Checkbox
-              color="green"
-              status={node[key].value === 1 ? "checked" : "unchecked"}
-              onPress={() => handleCheckboxChange(newPath)}
-            />
-            <Text style={{ fontSize: 15 }}>{key.replace(/_/g, ".")}</Text>
-            {newPath.length <= 1 && node[key].value === 1 && (
-              <>
-                {reportes.find((item) =>
-                  newPath[0].split("_")[0].includes(item?.temas)
-                ) ? (
-                  <>
-                    <TouchableOpacity
-                      onPress={() => selectFile(newPath[0].split("_")[0])}
-                      style={{
-                        height: 30,
-                        paddingVertical: 0,
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Icon
-                        name="file-signature"
-                        color={"black"}
-                        size={20}
-                        style={{ paddingLeft: 10 }}
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() =>
-                        openPDF(
-                          `https://docs.google.com/gview?embedded=true&url=${process.env.EXPO_PUBLIC_STORAGE_URL}/pdfs/${
-                            reportes.find((item) =>
-                              newPath[0].split("_")[0].includes(item?.temas)
-                            ).pdf_uid
-                          }`
-                        )
-                      }
-                      style={{
-                        height: 30,
-                        paddingVertical: 0,
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Icon
-                        name="file"
-                        color={"black"}
-                        size={20}
-                        style={{ paddingLeft: 10 }}
-                      />
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => selectFile(newPath[0].split("_")[0])}
-                    style={{
-                      height: 30,
-                      paddingVertical: 0,
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Icon
-                      name="file-arrow-up"
-                      color={"black"}
-                      size={20}
-                      style={{ paddingLeft: 10 }}
-                    />
-                  </TouchableOpacity>
-                )}
-              </>
-            )}
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              setTypeOfSub("sub");
-              getNewCount(newPath);
-            }}
-            style={{ height: 30, paddingVertical: 0, justifyContent: "center" }}
-          >
-            <Text
-              style={{
-                fontSize: 11,
-                width: "auto",
-                paddingLeft: 40,
-                color: theme.colors.tertiary,
-              }}
-            >
-              + Añadir subtema
-            </Text>
-          </TouchableOpacity>
-          {node[key].subtemas &&
-            node[key].value === 0 &&
-            renderTree(node[key].subtemas, newPath)}
-        </View>
-      );
-    });
-  };
-
+  /**
+   * Funcion para traer la informacion de la materia ligada a la pantalla en el momento.
+   */
   const fetchMateria = () => {
     setLoading(true);
 
@@ -255,7 +84,6 @@ const CheckboxTree = ({ route, navigation }) => {
         .then((response) => response.json())
         .then((data) => {
           setMateria(data);
-          setTree(JSON.parse(data.temas));
         })
         .then(() => setLoading(false))
         .catch((error) => {
@@ -267,7 +95,51 @@ const CheckboxTree = ({ route, navigation }) => {
     } catch (error) {}
   };
 
-  const fetchReportes = () => {
+  /**
+   * Funcion para recopilar los datos del programa seleccionado y asignar la lista de UIDs
+   * 
+   * @param {Number} programaClave Clave del programa a traer los datos
+   */
+  const fetchPrograma = (programaClave) => {
+    try {
+      const options = {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-type": "application/json",
+        },
+      };
+
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/programas/${programaClave}`;
+      fetch(url, options)
+        .then((response) => response.json())
+        .then((data) => {
+          if(uids)
+          setUids(JSON.parse(data.temas));
+        })
+        .then(() => setLoading(false))
+        .catch((error) => {
+          console.log(
+            `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/programas/${programaClave}`,
+            error
+          );
+        });
+    } catch (error) {}
+  };
+
+  /**
+   * Funcion para establecer el ultimo UID en el render de los temas
+   *
+   * @param {Array} listUids Lista de UIDs para ubicar el ultimo uid ingresado
+   */
+  const setLastUids = (listUids) => {
+    setUids(JSON.parse(listUids.temas));
+  };
+
+  /**
+   * Funcion para obtener todos los reportes correspondientes a la materia y asigna los datos a la variable Reportes y el ultimo reporte para que se muestre
+   */
+  const fetchReportes = async () => {
     setLoading(true);
 
     try {
@@ -280,12 +152,13 @@ const CheckboxTree = ({ route, navigation }) => {
       };
 
       const url = `${process.env.EXPO_PUBLIC_API_URL}/reportes/${materiaNrc}`;
-      fetch(url, options)
+      await fetch(url, options)
         .then((response) => response.json())
         .then((data) => {
+          setLastUids(data[data.length - 1]);
           setReportes(data);
         })
-        .then(() => setLoading(false))
+        .finally(() => setLoading(false))
         .catch((error) => {
           console.log(
             `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/reportes`,
@@ -295,28 +168,32 @@ const CheckboxTree = ({ route, navigation }) => {
     } catch (error) {}
   };
 
+  /**
+   * Funcion para poder modificar los temas de los reportes y crear nuevos junto con la semana. 
+   */
   const updateTemas = () => {
     setLoading(true);
 
-    const data = { ...materia };
-    data.profesor = data.profesor.id;
-    data.programa = data.programa.clave;
+    const formData = new FormData();
+    formData.append("temas", JSON.stringify(uids));
+    formData.append("materia", materiaNrc);
+    formData.append("semana", newWeek);
 
     try {
       const options = {
         method: "POST",
         headers: {
-          Accept: "application/json",
-          "Content-type": "application/json",
+          "Content-type": "multipart/form-data",
         },
-        body: JSON.stringify({ ...data, temas: JSON.stringify(tree) }),
+        body: formData,
       };
 
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/materias/update`;
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/reportes/upload`;
+
       fetch(url, options)
         .then((response) => {
           if (response.status !== 200) {
-            Alert.alert("Error", `Ocurrió un error inesperado`, [
+            Alert.alert("Error", `Ocurrió un error inesperado\n${response}`, [
               {
                 text: "Ok",
                 style: "cancel",
@@ -325,33 +202,52 @@ const CheckboxTree = ({ route, navigation }) => {
           }
         })
         .then(() => setLoading(false))
+        .finally(() => {
+          setNewReport(false);
+          fetchReportes();
+          setNewWeek();
+          setSelectedReport();
+        })
         .catch((error) => {
           console.log(
-            `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/materias`,
+            `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/reportes/upload`,
             error
           );
         });
     } catch (error) {}
   };
 
+  /**
+   * Hook para traer toda la informacion necesaria al montar los componentes
+   */
   useEffect(() => {
-    fetchReportes();
-    fetchMateria();
-  }, []);
-
-  const [firstFetch, setFirstFetch] = useState(true);
-
-  useEffect(() => {
-    if (materia) {
-      if (firstFetch) {
-        setFirstFetch(false);
-      } else {
-        updateTemas();
+    const fetchData = async () =>{
+      try {
+        await fetchReportes();
+        fetchMateria();
+        setCheckableTree(true);
+      } catch (error) {
+        console.log(error);
       }
     }
-  }, [tree]);
 
-  const uploadFile = async (file, tema) => {
+    fetchData()
+  }, []);
+
+  useEffect(() => {
+    if (reportes.length === 0 && materia?.programa) {
+      fetchPrograma(materia?.programa?.clave);
+    }
+  }, [materia]);
+
+  /**
+   * Funcion para subir el reporte en PDF junto con la semana en la que se realizaron las actividades
+   * 
+   * @param {Blob} file Archivo PDF en binario que se va a subir
+   * @param {String} week Semana en la que se va a subir el reporte
+   * @returns
+   */
+  const uploadFile = async (file, week) => {
     setLoading(true);
 
     const formData = new FormData();
@@ -360,8 +256,9 @@ const CheckboxTree = ({ route, navigation }) => {
       type: "application/pdf",
       name: file.name,
     });
-    formData.append("tema", tema);
+    formData.append("semana", week);
     formData.append("materia", materiaNrc);
+    
 
     const url = `${process.env.EXPO_PUBLIC_API_URL}/reportes/upload`;
 
@@ -388,20 +285,26 @@ const CheckboxTree = ({ route, navigation }) => {
     }
   };
 
-  const selectFile = async (tema) => {
+  /**
+   * Funcion para abrir el selector de archivos y proceder con la subida de archivos una vez que se seleccione el PDF.
+   * 
+   * @param {String} week Semana en la que se va a subir el archivo
+   */
+  const selectFile = async (week) => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: "application/pdf",
       });
 
       if (!result.canceled) {
-        const resultPdf = await uploadFile(result.assets[0], tema);
-        if (resultPdf.ok) {
+        const resultPdf = await uploadFile(result.assets[0], week);
+        if (resultPdf?.ok) {
           Toast.show({
             type: ALERT_TYPE.SUCCESS,
             title: "PDF subido con éxito",
-            textBody: `El reporte del tema ${tema} se ha subido con éxito!`,
+            textBody: `El reporte de la semana ${week} se ha subido con éxito!`,
           });
+          fetchReportes()
         }
       }
     } catch (err) {
@@ -461,80 +364,151 @@ const CheckboxTree = ({ route, navigation }) => {
                 Aula: {materia.edificio}-{materia.aula}
               </Text>
             </View>
+
+            <View
+              style={{ position: "relative", flexDirection: "row", top: 20 }}
+            >
+              <SelectDropdown
+                data={reportes}
+                renderButton={(selectedItem, isOpen) => {
+                  return (
+                    <View
+                      style={{
+                        minHeight: 50,
+                        backgroundColor: theme.colors.secondary,
+                        borderRadius: 10,
+                        justifyContent: "center",
+                        alignItems: "flex-start",
+                        elevation: 5,
+                        width: "65%",
+                      }}
+                    >
+                      <Text style={{ fontSize: 18, paddingHorizontal: 15 }}>
+                        {newWeek
+                          ? `Semana ${newWeek}`
+                          : selectedItem?.semana
+                          ? `Semana ${selectedItem?.semana}`
+                          : "Selecciona una semana"}
+                      </Text>
+                      <Icon
+                        name="chevron-down"
+                        size={18}
+                        color={"black"}
+                        style={{
+                          position: "absolute",
+                          right: 10,
+                          height: 48,
+                          textAlignVertical: "center",
+                        }}
+                      />
+                    </View>
+                  );
+                }}
+                renderItem={(item, index, isSelected) => (
+                  <View
+                    style={{
+                      ...style.general.center,
+                      ...(isSelected && {
+                        backgroundColor: theme.colors.tertiary_op,
+                      }),
+                      paddingVertical: 10,
+                    }}
+                  >
+                    <Text>Semana {item?.semana}</Text>
+                  </View>
+                )}
+                search
+                onSelect={(selectedItem) => {
+                  setUids(JSON.parse(selectedItem.temas));
+                  setSelectedReport(selectedItem);
+                }}
+                ref={selectWeek}
+                dropdownStyle={{ borderRadius: 10 }}
+                searchInputTxtColor={"black"}
+                searchPlaceHolder={"Search here"}
+                searchPlaceHolderColor={"grey"}
+                renderSearchInputLeftIcon={() => {
+                  return (
+                    <Icon name={"magnifying-glass"} color={"black"} size={18} />
+                  );
+                }}
+              />
+              <Pressable
+                style={{
+                  height: 35,
+                  width: 35,
+                  backgroundColor: theme.colors.tertiary_op,
+                  borderRadius: 10,
+                  elevation: 5,
+                  marginVertical: "auto",
+                  marginLeft: 15,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                onPress={() => {
+                  newReport ? setNewWeek() : setNewWeek(reportes.length + 1);
+                  setNewReport(!newReport);
+                  if(reportes.length > 0){
+                    setUids(JSON.parse(reportes[reportes.length - 1]?.temas))
+                  }
+                  setSelectedReport();
+                  selectWeek.current.reset();
+                }}
+              >
+                <Icon
+                  name={newReport ? "ban" : "plus"}
+                  size={20}
+                  color={"black"}
+                />
+              </Pressable>
+            </View>
           </View>
         )}
       </View>
       <View style={{ padding: 20, paddingVertical: 30, width: "100%" }}>
+        {/* Sección para mostrar los temas que corresponden a la materia */}
         <View style={styles.container}>
-          <ScrollView style={{ maxHeight: 370 }}>{renderTree(tree)}</ScrollView>
-          <TouchableOpacity
-            onPress={() => {
-              setTypeOfSub("tema");
-              getNewCount();
-            }}
-            style={{ height: 40, paddingVertical: 0, justifyContent: "center" }}
-          >
-            <Text
-              style={{
-                fontSize: 11,
-                width: "auto",
-                color: theme.colors.tertiary,
-              }}
-            >
-              + Añadir tema
-            </Text>
-          </TouchableOpacity>
-          <Portal>
-            <Modal
-              visible={visibleModal}
-              onDismiss={() => setVisibleModal(false)}
-              contentContainerStyle={{
-                backgroundColor: "white",
-                padding: 30,
-                width: "90%",
-                margin: "auto",
-                borderRadius: 30,
-              }}
-            >
-              <View style={{ alignItems: "center" }}>
-                <Text
-                  style={{
-                    textAlign: "center",
-                    marginBottom: 15,
-                    fontSize: 20,
-                  }}
-                >
-                  Nombre del tema {subtitleToAdd}
-                </Text>
-                <Input
-                  onChangeText={(text) => setNameToAdd(text)}
-                  style={{
-                    ...style.login.input_text,
-                    width: "90%",
-                    marginVertical: 10,
-                  }}
-                  theme={{ roundness: 20 }}
-                  activeOutlineColor={"black"}
-                  mode="outlined"
-                />
-                <Button
-                  onPress={() =>
-                    typeOfSub.includes("tema")
-                      ? handleAddTema()
-                      : handleAddSubtema(newPathRef)
-                  }
-                  style={{
-                    backgroundColor: theme.colors.tertiary_op,
-                    marginTop: 15,
-                  }}
-                  mode="elevated"
-                >
-                  <Text style={{ color: "black" }}>Añadir</Text>
-                </Button>
-              </View>
-            </Modal>
-          </Portal>
+          <ScrollView style={{ maxHeight: 370 }}>{reportes && renderTree(reportes[reportes?.length - 1])}</ScrollView> 
         </View>
+        {selectedReport ? (
+          selectedReport.pdf_uid === "" ?
+          <Button
+            mode="elevated"
+            style={{
+              marginVertical: 15,
+              backgroundColor: theme.colors.tertiary_op,
+            }}
+            onPress={() => selectFile(selectedReport.semana)}
+          >
+            <Text>Crear PDF </Text>
+            <Icon name="file" color={"black"} size={19} />
+          </Button>
+          : 
+          <Button
+            mode="elevated"
+            style={{
+              marginVertical: 15,
+              backgroundColor: theme.colors.tertiary_op,
+            }}
+            onPress={() => openPDF(`https://docs.google.com/gview?embedded=true&url=${process.env.EXPO_PUBLIC_STORAGE_URL}/pdfs/${selectedReport.pdf_uid}`)}
+          >
+            <Text>Ver PDF </Text>
+            <Icon name="file" color={"black"} size={19} />
+          </Button>
+        ) : (
+          newReport && (
+            <Button
+              mode="elevated"
+              style={{
+                marginVertical: 15,
+                backgroundColor: theme.colors.tertiary_op,
+              }}
+              onPress={() => updateTemas()}
+            >
+              <Text>Guardar</Text>
+            </Button>
+          )
+        )}
       </View>
 
       {loading && (

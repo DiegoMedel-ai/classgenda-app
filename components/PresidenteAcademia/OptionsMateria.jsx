@@ -6,47 +6,34 @@ import { useEffect, useState } from "react";
 import Icon from "react-native-vector-icons/FontAwesome6";
 import CircularProgressBar from "../CircularProgress";
 import { useIsFocused } from "@react-navigation/native";
+import useUids from "../../hooks/uids";
 
 const OptionsMateria = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false)
   const [percentage, setPercentage] = useState(0)
   const isFocused = useIsFocused();
   const { materiaNrc, maestroId } = route.params;
+  const { getTemaData } = useUids()
 
-  function calculatePercentageOfOnes(data) {
-    // Función recursiva para contar los valores de 1 y el total de elementos
-    function countValues(obj) {
-      let count = 0; // Contador de valores que son 1
-      let total = 0; // Contador total de elementos
-  
-      // Iterar sobre las claves del objeto
-      for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          // Contar el valor actual
-          total++;
-          if (obj[key].value === 1) {
-            count++;
-          }
-  
-          // Contar los valores en los subtemas
-          if (obj[key].subtemas && Object.keys(obj[key].subtemas).length > 0) {
-            const result = countValues(obj[key].subtemas);
-            count += result.count;
-            total += result.total;
-          }
-        }
+  function calculatePercentage(uids = []) {
+    var hoursCompleted = 0;
+    var hoursTotal = 0;
+    uids.forEach(uid => {
+      const [ , level, name, value, hours] = getTemaData(uid);
+      
+      hoursTotal += Number.parseInt(hours);
+
+      if(Number.parseInt(value) === 2){
+        hoursCompleted += Number.parseInt(hours);
       }
-  
-      return { count, total };
-    }
-  
-    const { count, total } = countValues(data);
-  
-    if (total === 0) return 0; // Evitar división por cero
-    return (count / total) * 100;
+    });
+
+    const percentage = (hoursCompleted * 100) / hoursTotal;
+    
+    return percentage;
   }
 
-  const fetchMateria = () => {
+  const fetchReportes = () => {
     setLoading(true);
 
     try {
@@ -58,28 +45,32 @@ const OptionsMateria = ({ route, navigation }) => {
         },
       };
 
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/materias/${materiaNrc}`;
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/reportes/${materiaNrc}`;
       fetch(url, options)
         .then((response) => response.json())
         .then((data) => {
-          setPercentage(calculatePercentageOfOnes(JSON.parse(data.temas)));
+          if(data.length > 0){
+            setPercentage(calculatePercentage(JSON.parse(data[data.length - 1]?.temas)));
+          }else{
+            setPercentage(0);
+          }
+          
         })
         .then(() => setLoading(false))
         .catch((error) => {
           console.log(
-            `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/materias`,
+            `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/reportes/${materiaNrc}`,
             error
           );
         });
     } catch (error) {}
   };
 
-  
   useEffect(() => {
     if (materiaNrc === 0) {
       navigation.goBack();
     } else {
-      fetchMateria()
+      fetchReportes()
     }
   }, [isFocused]);
 

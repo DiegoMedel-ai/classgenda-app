@@ -16,7 +16,6 @@ import {
   ScrollView,
   TextInput,
   Alert,
-  StyleSheet,
   TouchableOpacity,
 } from "react-native";
 import SelectDropdown from "react-native-select-dropdown";
@@ -24,9 +23,21 @@ import Icon from "react-native-vector-icons/FontAwesome6";
 import IconFeather from "react-native-vector-icons/Feather";
 import { Formik } from "formik";
 import { programaSchema } from "@/constants/schemas";
-import { generateUID, getTemaData } from "../../hooks/uids";
+import useUids from "../../hooks/uids";
 
+/**
+ * Componente `ProgramasAdmin` para la administración de programas.
+ *
+ * Este componente permite gestionar la lista de programas, seleccionar un programa,
+ * editarlo y actualizar la información. Maneja la visibilidad de modales y el estado
+ * de carga. También incluye referencias para los selectores de requisitos y simultaneidad.
+ *
+ * @component
+ *
+ * @returns {JSX.Element} El componente renderiza la interfaz de administración de programas.
+ */
 export default function ProgramasAdmin() {
+  // Estado inicial de un programa
   const initPrograma = {
     clave: 0,
     nombre: "",
@@ -40,27 +51,60 @@ export default function ProgramasAdmin() {
     perfil_egreso: "",
     temas: "[]",
   };
-  const [programas, setProgramas] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [programaSelected, setProgramaSelected] = useState(initPrograma);
-  const [editable, setEditable] = useState(false);
-  const [update, setUpdate] = useState(true);
-  const [visibleModal, setVisibleModal] = useState(false);
-  const [successResult, setSuccessResult] = useState(false);
+
+  // Estados del componente
+  const [programas, setProgramas] = useState([]); // Lista de programas
+  const [departamentos, setDepartamentos] = useState([]); // Lista de departamentos
+  const [loading, setLoading] = useState(false); // Estado de carga
+  const [programaSelected, setProgramaSelected] = useState(initPrograma); // Programa seleccionado
+  const [editable, setEditable] = useState(false); // Indica si el programa es editable
+  const [update, setUpdate] = useState(true); // Indica si se debe actualizar
+  const [visibleModal, setVisibleModal] = useState(false); // Visibilidad del modal de éxito
+  const [successResult, setSuccessResult] = useState(false); // Resultado de la operación de éxito
+
+  // Estados para los temas
+  const {
+    visibleModalHours,
+    visibleModalSubtopic,
+    setVisibleModalHours,
+    setVisibleModalSubtopic,
+    subtitleToAdd,
+    nameToAdd,
+    setNameToAdd,
+    hoursToAdd,
+    setHoursToAdd,
+    typeOfSub,
+    setTypeOfSub,
+    uids,
+    setUids,
+    setEditableTree,
+    setUpdateTree,
+    getNewCount,
+    handleAddTema,
+    editTema,
+    editHours,
+    renderTree,
+    getTemaData,
+  } = useUids();
+
+  // Referencias a los selectores
   const select = useRef();
   const selectRequisito = useRef();
   const selectSimultaneo = useRef();
+  const selectDepartamento = useRef();
 
   /**
-   * Function to fetch all the programs and set it to the object programas
-   * @param {boolean} loadingS Value that says if fetching is already in use
+   * Obtiene todos los programas desde el servidor y actualiza el estado `programas`.
+   *
+   * @param {boolean} [loadingS=false] Indica si la carga ya está en curso.
    */
   const fetchProgramas = (loadingS = false) => {
     if (!loadingS) {
-      setLoading(true);
-      setProgramaSelected(initPrograma);
-      select.current?.reset();
+      setLoading(true); // Activa el estado de carga
+      setProgramaSelected(initPrograma); // Reinicia la selección de programa
+      select.current?.reset(); // Reinicia el selector
     }
+
     try {
       const options = {
         method: "GET",
@@ -73,24 +117,66 @@ export default function ProgramasAdmin() {
       fetch(`${process.env.EXPO_PUBLIC_API_URL}/programas`, options)
         .then((response) => response.json())
         .then((data) => {
-          setProgramas(data);
+          setProgramas(data); // Actualiza el estado con los datos obtenidos
         })
-        .then(() => setLoading(false))
+        .finally(() => {
+          setLoading(false); // Desactiva el estado de carga
+        })
         .catch((error) => {
           console.log(
-            `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/programas`,
+            `Error en la solicitud a: ${process.env.EXPO_PUBLIC_API_URL}/programas`,
             error
           );
+          setLoading(false); // Desactiva el estado de carga en caso de error
         });
-    } catch (error) {}
+    } catch (error) {
+      console.log("Error al intentar obtener los programas", error);
+      setLoading(false); // Desactiva el estado de carga en caso de error
+    }
   };
 
   /**
-   * Function to update the program
-   * @param {Object} values values of formik to submit
+   * Obtiene todos los departamentos desde el servidor y actualiza los `departamentos`.
+   */
+  const fetchDepartamentos = () => {
+    try {
+      const options = {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-type": "application/json",
+        },
+      };
+
+      fetch(`${process.env.EXPO_PUBLIC_API_URL}/departamentos`, options)
+        .then((response) => response.json())
+        .then((data) => {
+          setDepartamentos(data);
+        })
+        .finally(() => {
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.log(
+            `Error en la solicitud a: ${process.env.EXPO_PUBLIC_API_URL}/departamentos`,
+            error
+          );
+          setLoading(false);
+        });
+    } catch (error) {
+      console.log("Error al intentar obtener los departamentos", error);
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Actualiza un programa enviando una solicitud POST al servidor con los valores del formulario.
+   * Incluye los temas en el cuerpo de la solicitud y maneja la respuesta para mostrar el resultado.
+   *
+   * @param {Object} values Valores del formulario enviados para actualizar el programa.
    */
   const updateFun = (values) => {
-    setLoading(true);
+    setLoading(true); // Activa el estado de carga    
 
     try {
       const options = {
@@ -98,7 +184,7 @@ export default function ProgramasAdmin() {
         headers: {
           "Content-type": "application/json",
         },
-        body: JSON.stringify({ ...values, temas: JSON.stringify(uids) }),
+        body: JSON.stringify({ ...values, temas: JSON.stringify(uids) }), // Incluye los temas en el cuerpo de la solicitud
       };
 
       const url = `${process.env.EXPO_PUBLIC_API_URL}/programas/${
@@ -109,6 +195,7 @@ export default function ProgramasAdmin() {
         .then((response) => response.json())
         .then((data) => {
           if (data) {
+            // Muestra el modal de éxito y actualiza la lista de programas
             setSuccessResult(true);
             setVisibleModal(true);
             setTimeout(() => {
@@ -120,16 +207,21 @@ export default function ProgramasAdmin() {
           }
         })
         .catch((error) => {
-          console.log(`Fetch error to: ${url}`, error);
+          console.log(`Error en la solicitud a: ${url}`, error);
+          setLoading(false); // Desactiva el estado de carga en caso de error
         });
-    } catch (error) {}
+    } catch (error) {
+      console.log("Error al intentar actualizar el programa", error);
+      setLoading(false); // Desactiva el estado de carga en caso de error
+    }
   };
 
   /**
-   * Function to delete program
+   * Elimina un programa seleccionado enviando una solicitud GET al servidor.
+   * Muestra una alerta confirmando la eliminación o un error si no se puede eliminar.
    */
   const deleteFun = () => {
-    setLoading(true);
+    setLoading(true); // Activa el estado de carga
 
     try {
       const options = {
@@ -144,6 +236,7 @@ export default function ProgramasAdmin() {
       fetch(url, options)
         .then((response) => {
           if (response.status === 200) {
+            // Muestra una alerta de éxito y actualiza la lista de programas
             Alert.alert(
               "Programa eliminado",
               "Se ha eliminado el registro correctamente",
@@ -156,6 +249,7 @@ export default function ProgramasAdmin() {
               ]
             );
           } else {
+            // Muestra una alerta de error si el programa no se puede eliminar
             Alert.alert(
               "Error",
               "Se tienen relacionadas materias a este programa por lo que no se puede eliminar",
@@ -163,22 +257,29 @@ export default function ProgramasAdmin() {
                 {
                   text: "Ok",
                   style: "cancel",
-                  onPress: setLoading(false),
+                  onPress: () => setLoading(false),
                 },
               ]
             );
           }
         })
         .catch((error) => {
-          console.log(`Fetch error to: ${url}`, error);
+          console.log(`Error en la solicitud a: ${url}`, error);
+          setLoading(false); // Desactiva el estado de carga en caso de error
         });
-    } catch (error) {}
+    } catch (error) {
+      console.log("Error al intentar eliminar el programa", error);
+      setLoading(false); // Desactiva el estado de carga en caso de error
+    }
   };
 
+  // Hook para cargar programas y departamentos al montar el componente
   useEffect(() => {
     fetchProgramas();
+    fetchDepartamentos();
   }, []);
 
+  // Hook para actualizar las selecciones y los temas cuando cambia `programaSelected`
   useEffect(() => {
     selectRequisito.current?.selectIndex(
       programas.findIndex((x) => x.clave === programaSelected?.requisito) + 1
@@ -186,261 +287,24 @@ export default function ProgramasAdmin() {
     selectSimultaneo.current?.selectIndex(
       programas.findIndex((x) => x.clave === programaSelected?.simultaneo) + 1
     );
+    selectDepartamento.current?.selectIndex(
+      departamentos.findIndex((x) => x.id === programaSelected?.departamento) + 1
+    );
 
     setUids(JSON.parse(programaSelected?.temas));
   }, [programaSelected]);
 
+  // Hook para inicializar `programaSelected` y `uids` cuando cambia `update`
   useEffect(() => {
     setProgramaSelected(initPrograma);
     setUids(JSON.parse(initPrograma.temas));
+    setUpdateTree(update);
   }, [update]);
 
-  /**
-   * Section to render tree of subjects
-   */
-  const [visibleModal2, setVisibleModal2] = useState(false);
-  const [visibleModal3, setVisibleModal3] = useState(false);
-  const [subtitleToAdd, setSubtitleToAdd] = useState("N1.1.1TV0H0");
-  const [nameToAdd, setNameToAdd] = useState("_");
-  const [hoursToAdd, setHoursToAdd] = useState(0);
-  const [typeOfSub, setTypeOfSub] = useState("tema");
-  const [uids, setUids] = useState([]);
-
-  /**
-   * Gets the new count after the param path
-   * @param {String} path uid to add new count
-   */
-  const getNewCount = (path) => {
-    var length;
-    if (!path) {
-      length =
-        uids.filter((uid) => getTemaData(uid)[1].split(".").length === 1)
-          .length + 1;
-    } else {
-      const childTopics = uids
-        .map((uid) => getTemaData(uid)[1])
-        .filter((id) => {
-          const parts = id.split(".");
-          return (
-            id.startsWith(path + ".") &&
-            parts.length === path.split(".").length + 1
-          );
-        })
-        .map((id) => parseInt(id.split(".").pop()));
-
-      const maxChild = Math.max(0, ...childTopics);
-
-      length = `${path}.${maxChild + 1}`;
-    }
-    const uid = generateUID(length, nameToAdd, 0, 0);
-    setSubtitleToAdd(uid);
-    setVisibleModal2(true);
-  };
-
-  /**
-   * Sets a new subject uid
-   */
-  const handleAddTema = () => {
-    const data = getTemaData(subtitleToAdd);
-    const uid = generateUID(data[1], nameToAdd, 0, 0);
-    setUids((prevUids) => [...prevUids, uid]);
-    setNameToAdd("_");
-    setVisibleModal2(false);
-  };
-
-  /**
-   * Edits the name of the subject using the reference to nameToAdd
-   */
-  const editTema = () => {
-    const index = uids.findIndex(
-      (item) => getTemaData(subtitleToAdd)[1] === getTemaData(item)[1]
-    );
-    const _data = [...uids];
-    const tema = getTemaData(subtitleToAdd);
-    _data[index] = generateUID(tema[1], nameToAdd, 0, 0);
-    setUids(_data);
-    setNameToAdd("_");
-    setVisibleModal2(false);
-  };
-
-  /**
-   * Edits the hours of the subject using the reference to hoursToAdd
-   */
-  const editHours = () => {
-    const index = uids.findIndex(
-      (item) => getTemaData(subtitleToAdd)[1] === getTemaData(item)[1]
-    );
-    const _data = [...uids];
-    const tema = getTemaData(subtitleToAdd);
-    _data[index] = generateUID(tema[1], tema[2], 0, hoursToAdd);
-    setUids(_data);
-    setHoursToAdd(0);
-    setVisibleModal3(false);
-  };
-
-  /**
-   * Function to sort the tree of uids by the number of subject
-   * @param {String} a
-   * @param {String} b
-   * @returns String[]
-   */
-  const sortTree = (a, b) => {
-    const matchA = getTemaData(a);
-    const matchB = getTemaData(b);
-
-    if (matchA && matchB) {
-      const numA = matchA[1].split(".").map(Number);
-      const numB = matchB[1].split(".").map(Number);
-
-      for (let i = 0; i < Math.max(numA.length, numB.length); i++) {
-        const valA = numA[i] || 0;
-        const valB = numB[i] || 0;
-
-        if (valA !== valB) {
-          return valA - valB;
-        }
-      }
-    }
-    return 0;
-  };
-
-  /**
-   *
-   * @param {String} node uid to delete
-   */
-  const deleteTree = (node) => {
-    const newTree = uids.filter(
-      (uid) => !getTemaData(uid)[1].startsWith(getTemaData(node)[1])
-    );
-    setUids(newTree);
-  };
-
-  /**
-   * Function to render the array of uids
-   * @returns View to render the uids
-   */
-  const renderTree = () => {
-    return uids.sort(sortTree).map((uid) => {
-      const _paddingLeft = getTemaData(uid)[1].split(".").length * 15;
-      return (
-        <View key={uid} style={{ paddingLeft: _paddingLeft }}>
-          <View style={styles.programas.checkboxRow}>
-            <Text
-              style={{ ...(!editable && { marginBottom: 15 }), fontSize: 15 }}
-            >
-              {getTemaData(uid)[1]}. {getTemaData(uid)[2]} -{" "}
-              {getTemaData(uid)[4]} h
-            </Text>
-
-            {editable && (
-              <TouchableOpacity
-                style={{
-                  height: 30,
-                  paddingVertical: 0,
-                  justifyContent: "center",
-                }}
-                onPress={() => {
-                  setTypeOfSub("edit");
-                  setSubtitleToAdd(uid);
-                  setVisibleModal2(true);
-                }}
-              >
-                <Icon
-                  name="pen"
-                  color={"black"}
-                  size={15}
-                  style={{ paddingLeft: 10 }}
-                />
-              </TouchableOpacity>
-            )}
-
-            {editable && (
-              <TouchableOpacity
-                style={{
-                  height: 30,
-                  paddingVertical: 0,
-                  justifyContent: "center",
-                }}
-                onPress={() => {
-                  Alert.alert(
-                    "Confirmar",
-                    `Seguro que quiere eliminar todo el tema y subtemas del ${
-                      getTemaData(uid)[1]
-                    }?`,
-                    [
-                      {
-                        text: "Confirmar",
-                        style: "default",
-                        onPress: () => deleteTree(uid),
-                      },
-                      {
-                        text: "Cancelar",
-                        style: "cancel",
-                      },
-                    ]
-                  );
-                }}
-              >
-                <Icon
-                  name="trash"
-                  color={"black"}
-                  size={15}
-                  style={{ paddingLeft: 10 }}
-                />
-              </TouchableOpacity>
-            )}
-
-            {editable && (
-              <TouchableOpacity
-                style={{
-                  height: 30,
-                  paddingVertical: 0,
-                  justifyContent: "center",
-                }}
-                onPress={() => {
-                  setTypeOfSub("edit");
-                  setSubtitleToAdd(uid);
-                  setVisibleModal3(true);
-                }}
-              >
-                <Icon
-                  name="clock"
-                  color={"black"}
-                  size={15}
-                  style={{ paddingLeft: 10 }}
-                />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {editable && (
-            <TouchableOpacity
-              onPress={() => {
-                setTypeOfSub("sub");
-                getNewCount(getTemaData(uid)[1]);
-              }}
-              style={{
-                height: 30,
-                paddingVertical: 0,
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 11,
-                  width: "auto",
-                  paddingLeft: _paddingLeft,
-                  color: theme.colors.tertiary,
-                }}
-              >
-                + Añadir subtema
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      );
-    });
-  };
+  // Hook para cambiar el valor de editable en el tree de temas
+  useEffect(() => {
+    setEditableTree(editable);
+  }, [editable]);
 
   return (
     <View style={{ ...styles.admin.overlay_top }}>
@@ -527,7 +391,7 @@ export default function ProgramasAdmin() {
                   contentContainerStyle={{ flexGrow: 1 }}
                   style={{
                     width: "100%",
-                    maxHeight: editable ? "75%" : "100%",
+                    maxHeight: editable ? "85%" : "100%",
                   }}
                 >
                   <View style={{ ...styles.general.center, width: "100%" }}>
@@ -547,6 +411,71 @@ export default function ProgramasAdmin() {
                       />
                     </View>
                   </View>
+
+                  <View style={{...styles.general.center, width: "100%"}}>
+                  <View
+                    style={{
+                      ...styles.programas.cards_show,
+                      backgroundColor: theme.colors.secondary,
+                      marginTop: 20,
+                    }}
+                  >
+                    <Text>Departamento del programa</Text>
+                    <SelectDropdown
+                      data={[{ clave: null, nombre: "Ninguno" }, ...departamentos]}
+                      disabled={!editable && update}
+                      ref={selectDepartamento}
+                      renderButton={(selectedItem, isOpen) => {
+                        return (
+                          <View
+                            style={{
+                              ...styles.general.button_select,
+                              width: "90%",
+                            }}
+                          >
+                            <Text>
+                              {(selectedItem && `${selectedItem.departamento}`) ||
+                                "Ninguno"}
+                            </Text>
+                          </View>
+                        );
+                      }}
+                      renderItem={(item, index, isSelected) => (
+                        <View
+                          style={{
+                            ...styles.general.center,
+                            ...(isSelected && {
+                              backgroundColor: theme.colors.tertiary_op,
+                            }),
+                            paddingVertical: 10,
+                          }}
+                        >
+                          <Text>
+                            {item.departamento}
+                          </Text>
+                        </View>
+                      )}
+                      onSelect={(item) =>
+                        setFieldValue("departamento", item.id)
+                      }
+                      search
+                      dropdownStyle={{ borderRadius: 10 }}
+                      searchInputTxtColor={"black"}
+                      searchPlaceHolder={"Search here"}
+                      searchPlaceHolderColor={"grey"}
+                      renderSearchInputLeftIcon={() => {
+                        return (
+                          <Icon
+                            name={"magnifying-glass"}
+                            color={"black"}
+                            size={18}
+                          />
+                        );
+                      }}
+                    />
+                  </View>
+                  </View>
+
                   <View
                     style={{
                       ...styles.general.center,
@@ -608,6 +537,7 @@ export default function ProgramasAdmin() {
                       />
                     </View>
                   </View>
+
                   <View
                     style={{
                       ...styles.general.center,
@@ -748,6 +678,7 @@ export default function ProgramasAdmin() {
                       />
                     </View>
                   </View>
+
                   <View
                     style={{
                       ...styles.general.center,
@@ -789,6 +720,7 @@ export default function ProgramasAdmin() {
                       />
                     </View>
                   </View>
+
                   <View
                     style={{
                       ...styles.general.center,
@@ -820,6 +752,7 @@ export default function ProgramasAdmin() {
                       />
                     </View>
                   </View>
+
                   <View
                     style={{
                       ...styles.general.center,
@@ -852,12 +785,13 @@ export default function ProgramasAdmin() {
                       />
                     </View>
                   </View>
+
                   <View style={styles.programas.container}>
                     <ScrollView style={{ maxHeight: "auto" }}>
                       {renderTree(uids)}
                     </ScrollView>
 
-                    {editable && (
+                    {(editable || !update) && (
                       <TouchableOpacity
                         onPress={() => {
                           setTypeOfSub("tema");
@@ -1044,10 +978,10 @@ export default function ProgramasAdmin() {
           )}
         </Modal>
 
-        {/* Modal to edit or add name to subject */}
+        {/* Modal to edit or add name to subtopic */}
         <Modal
-          visible={visibleModal2}
-          onDismiss={() => setVisibleModal2(false)}
+          visible={visibleModalSubtopic}
+          onDismiss={() => setVisibleModalSubtopic(false)}
           contentContainerStyle={{
             backgroundColor: "white",
             padding: 30,
@@ -1097,10 +1031,10 @@ export default function ProgramasAdmin() {
           </View>
         </Modal>
 
-        {/* Modal to edit or add hours to subject */}
+        {/* Modal to edit or add hours to subtopic */}
         <Modal
-          visible={visibleModal3}
-          onDismiss={() => setVisibleModal3(false)}
+          visible={visibleModalHours}
+          onDismiss={() => setVisibleModalHours(false)}
           contentContainerStyle={{
             backgroundColor: "white",
             padding: 30,

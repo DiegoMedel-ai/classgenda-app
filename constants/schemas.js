@@ -25,7 +25,8 @@ const programaSchema = Yup.object({
     horas_practica: Yup.number().required('Se necesitan horas de practica'),
     horas_curso: Yup.number().required('Se necesitan horas de curso'),
     descripcion: Yup.string().nullable(),
-    perfil_egreso: Yup.string().nullable()
+    perfil_egreso: Yup.string().nullable(),
+    departamento: Yup.number().nullable()
 })
 
 const materiaSchema = Yup.object({
@@ -50,4 +51,17 @@ const alumnoSchema = Yup.object({
     telefono: Yup.string().nullable()
 })
 
-export {signUpSchema, loginSchema, programaSchema, materiaSchema, alumnoSchema}
+const maestroSchema = Yup.object({
+    id: Yup.number().required(),
+    nombre: Yup.string().required(),
+    apellido: Yup.string().required(),
+    correo: Yup.string().email("Se necesita un correo valido").required(),
+    carrera: Yup.string().required(),
+    centro: Yup.string().required(),
+    situacion: Yup.number().required(),
+    telefono: Yup.string().nullable(),
+    academia: Yup.number().nullable(),
+    departamento: Yup.number().nullable()
+})
+
+export {signUpSchema, loginSchema, programaSchema, materiaSchema, alumnoSchema, maestroSchema}

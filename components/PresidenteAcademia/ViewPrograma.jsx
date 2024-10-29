@@ -1,21 +1,28 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { styles } from "@/constants/styles";
 import theme from "@/constants/theme";
-import {
-  Text,
-} from "react-native-paper";
-import {
-  View,
-  ActivityIndicator,
-  ScrollView,
-  TextInput,
-} from "react-native";
+import { Text } from "react-native-paper";
+import { View, ActivityIndicator, ScrollView, TextInput } from "react-native";
 import SelectDropdown from "react-native-select-dropdown";
 import Icon from "react-native-vector-icons/FontAwesome6";
 import { Formik } from "formik";
-import { getTemaData } from "../../hooks/uids";
+import useUids from "../../hooks/uids";
+import LoginContext from "@/constants/loginContext";
 
+
+/**
+ * Componente `ViewProgramas` para la vista de programas.
+ *
+ * Este componente permite visualizar la lista de programas y su informacion al seleccionar un programa, 
+ * Maneja la visibilidad de modales y el estado de carga. 
+ * También incluye referencias para los selectores de requisitos y simultaneidad.
+ *
+ * @component
+ *
+ * @returns {JSX.Element} El componente renderiza la interfaz de administración de programas.
+ */
 export default function ViewProgramas() {
+  // Estado inicial de un programa
   const initPrograma = {
     clave: 0,
     nombre: "",
@@ -28,7 +35,9 @@ export default function ViewProgramas() {
     descripcion: "",
     perfil_egreso: "",
   };
+  const { user } = useContext(LoginContext);
   const [programas, setProgramas] = useState([]);
+  const [departamentos, setDepartamentos] = useState([])
   const [loading, setLoading] = useState(false);
   const [programaSelected, setProgramaSelected] = useState(initPrograma);
   const [editable, setEditable] = useState(false);
@@ -36,7 +45,20 @@ export default function ViewProgramas() {
   const select = useRef();
   const selectRequisito = useRef();
   const selectSimultaneo = useRef();
+  const selectDepartamento = useRef();
 
+  // Estados para los temas
+  const {
+    uids,
+    setUids,
+    renderTree
+  } = useUids();
+
+  /**
+   * Obtiene todos los programas desde el servidor y actualiza el estado `programas`.
+   *
+   * @param {boolean} [loadingS=false] Indica si la carga ya está en curso.
+   */
   const fetchProgramas = (loadingS = false) => {
     if (!loadingS) {
       setLoading(true);
@@ -55,7 +77,7 @@ export default function ViewProgramas() {
       fetch(`${process.env.EXPO_PUBLIC_API_URL}/programas`, options)
         .then((response) => response.json())
         .then((data) => {
-          setProgramas(data);
+          setProgramas(data.filter(x => JSON.parse(user.departamentos).includes(x.departamento)));
         })
         .then(() => setLoading(false))
         .catch((error) => {
@@ -66,11 +88,48 @@ export default function ViewProgramas() {
         });
     } catch (error) {}
   };
+  
+  /**
+   * Obtiene todos los departamentos desde el servidor y actualiza los `departamentos`.
+   */
+  const fetchDepartamentos = () => {
+    try {
+      const options = {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-type": "application/json",
+        },
+      };
 
+      fetch(`${process.env.EXPO_PUBLIC_API_URL}/departamentos`, options)
+        .then((response) => response.json())
+        .then((data) => {
+          setDepartamentos(data);
+        })
+        .finally(() => {
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.log(
+            `Error en la solicitud a: ${process.env.EXPO_PUBLIC_API_URL}/departamentos`,
+            error
+          );
+          setLoading(false);
+        });
+    } catch (error) {
+      console.log("Error al intentar obtener los departamentos", error);
+      setLoading(false);
+    }
+  };
+
+  // Hook para cargar programas y departamentos al montar el componente
   useEffect(() => {
     fetchProgramas();
+    fetchDepartamentos();
   }, []);
 
+  // Hook para actualizar las selecciones y los temas cuando cambia `programaSelected`
   useEffect(() => {
     try {
       selectRequisito.current?.selectIndex(
@@ -78,6 +137,9 @@ export default function ViewProgramas() {
       );
       selectSimultaneo.current?.selectIndex(
         programas.findIndex((x) => x.clave === programaSelected?.simultaneo) + 1
+      );
+      selectDepartamento.current?.selectIndex(
+        departamentos.findIndex((x) => x.id === programaSelected?.departamento) + 1
       );
 
       setUids(JSON.parse(programaSelected?.temas));
@@ -89,59 +151,6 @@ export default function ViewProgramas() {
   useEffect(() => {
     setProgramaSelected(initPrograma);
   }, [update]);
-
-  /**
-   * Section to render tree of subjects
-   */
-  const [uids, setUids] = useState([]);
-
-  /**
-   * Function to sort the tree of uids by the number of subject
-   * @param {String} a
-   * @param {String} b
-   * @returns String[]
-   */
-  const sortTree = (a, b) => {
-    const matchA = getTemaData(a);
-    const matchB = getTemaData(b);
-
-    if (matchA && matchB) {
-      const numA = matchA[1].split(".").map(Number);
-      const numB = matchB[1].split(".").map(Number);
-
-      for (let i = 0; i < Math.max(numA.length, numB.length); i++) {
-        const valA = numA[i] || 0;
-        const valB = numB[i] || 0;
-
-        if (valA !== valB) {
-          return valA - valB;
-        }
-      }
-    }
-    return 0;
-  };
-
-  /**
-   * Function to render the array of uids
-   * @returns View to render the uids
-   */
-  const renderTree = () => {
-    return uids.sort(sortTree).map((uid) => {
-      const _paddingLeft = getTemaData(uid)[1].split(".").length * 15;
-      return (
-        <View key={uid} style={{ paddingLeft: _paddingLeft }}>
-          <View style={styles.programas.checkboxRow}>
-            <Text
-              style={{ ...(!editable && { marginBottom: 15 }), fontSize: 15 }}
-            >
-              {getTemaData(uid)[1]}. {getTemaData(uid)[2]} -{" "}
-              {getTemaData(uid)[4]} h
-            </Text>
-          </View>
-        </View>
-      );
-    });
-  };
 
   return (
     <View
@@ -262,6 +271,68 @@ export default function ViewProgramas() {
                       />
                     </View>
                   </View>
+                  
+                  <View style={{...styles.general.center, width: "100%"}}>
+                  <View
+                    style={{
+                      ...styles.programas.cards_show,
+                      backgroundColor: theme.colors.secondary,
+                      marginTop: 20,
+                    }}
+                  >
+                    <Text>Departamento del programa</Text>
+                    <SelectDropdown
+                      data={[{ clave: null, nombre: "Ninguno" }, ...departamentos]}
+                      disabled
+                      ref={selectDepartamento}
+                      renderButton={(selectedItem, isOpen) => {
+                        return (
+                          <View
+                            style={{
+                              ...styles.general.button_select,
+                              width: "90%",
+                            }}
+                          >
+                            <Text>
+                              {(selectedItem && `${selectedItem.departamento}`) ||
+                                "Ninguno"}
+                            </Text>
+                          </View>
+                        );
+                      }}
+                      renderItem={(item, index, isSelected) => (
+                        <View
+                          style={{
+                            ...styles.general.center,
+                            ...(isSelected && {
+                              backgroundColor: theme.colors.tertiary_op,
+                            }),
+                            paddingVertical: 10,
+                          }}
+                        >
+                          <Text>
+                            {item.departamento}
+                          </Text>
+                        </View>
+                      )}
+                      search
+                      dropdownStyle={{ borderRadius: 10 }}
+                      searchInputTxtColor={"black"}
+                      searchPlaceHolder={"Search here"}
+                      searchPlaceHolderColor={"grey"}
+                      renderSearchInputLeftIcon={() => {
+                        return (
+                          <Icon
+                            name={"magnifying-glass"}
+                            color={"black"}
+                            size={18}
+                          />
+                        );
+                      }}
+                    />
+                  </View>
+                  </View>
+
                   <View
                     style={{
                       ...styles.general.center,

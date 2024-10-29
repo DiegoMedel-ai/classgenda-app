@@ -32,6 +32,10 @@ function MainComponent() {
       component: <PresidenteAcademiaNav />,
     },
     {
+      rol: "jefe_departamento",
+      component: <PresidenteAcademiaNav />,
+    },
+    {
       rol: "estudiante",
       component: <AlumnoNav />,
     },
@@ -44,7 +48,7 @@ function MainComponent() {
     };
 
     checkUser();
-  }, [user]);
+  }, []);
 
   return (
     <LoginContext.Provider value={{ setUser, getUser, user, profileImage, setProfileImage }}>

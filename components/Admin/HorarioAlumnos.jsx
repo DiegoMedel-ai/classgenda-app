@@ -9,22 +9,28 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
-  Alert
+  Alert,
 } from "react-native";
 import { getDateFormat24 } from "@/hooks/date";
 import Icon from "react-native-vector-icons/Feather";
 import IconF6 from "react-native-vector-icons/FontAwesome6";
 import { styles } from "@/constants/styles";
 
+/**
+ * Pantalla para poder visual las materias inscritas de los alumnos y modificar los horarios e inscripciones del alumno seleccionado
+ *
+ * @param {Number} userId Numero de usuario para poder identificar el horario y hacer modificaciones sobre este mismo
+ * @returns {JSX.Element}
+ */
 const Horario = ({ userId }) => {
   const [inscripciones, setInscripciones] = useState([]);
   const [materias, setMaterias] = useState([]);
-  const [filteredMaterias, setFilteredMaterias] = useState([])
+  const [filteredMaterias, setFilteredMaterias] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState(0);
   const [visibleModal, setVisibleModal] = useState(false);
-  const [nrcAdd, setNrcAdd] = useState(0)
-  const [flagFirstFetch, setFlagFirstFetch] = useState(true)
+  const [nrcAdd, setNrcAdd] = useState(0);
+  const [flagFirstFetch, setFlagFirstFetch] = useState(true);
   const select = useRef();
 
   const Item = ({ item, onPress, backgroundColor, width, isSelected }) => (
@@ -138,20 +144,20 @@ const Horario = ({ userId }) => {
       </>
     );
   };
-  
+
   const filterMaterias = () => {
-    const data = [...materias]
-    
+    const data = [...materias];
+
     const materiasFiltradas = data.filter(
       (materia) =>
         !inscripciones.some(
           (inscripcion) => inscripcion.materia.nrc === materia.nrc
         )
-      );
-      select.current?.reset()
+    );
+    select.current?.reset();
 
     setFilteredMaterias(materiasFiltradas);
-  }
+  };
 
   const deleteInscripcion = () => {
     setLoading(true);
@@ -165,22 +171,29 @@ const Horario = ({ userId }) => {
         },
       };
 
-      fetch(`${process.env.EXPO_PUBLIC_API_URL}/inscripciones/delete/${selectedId}`, options)
+      fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/inscripciones/delete/${selectedId}`,
+        options
+      )
         .then((response) => {
-          if(response.status === 200){
-            Alert.alert('Inscripcion borrada', 'Se ha borrado la inscripcion correctamente', [
+          if (response.status === 200) {
+            Alert.alert(
+              "Inscripcion borrada",
+              "Se ha borrado la inscripcion correctamente",
+              [
+                {
+                  text: "Ok",
+                  style: "cancel",
+                },
+              ]
+            );
+          } else {
+            Alert.alert("Error", "Error al borrar la inscripcion", [
               {
-                'text': 'Ok',
-                'style': 'cancel'
-              }
-            ])
-          }else {
-            Alert.alert('Error', 'Error al borrar la inscripcion', [
-              {
-                'text': 'Ok',
-                'style': 'cancel'
-              }
-            ])
+                text: "Ok",
+                style: "cancel",
+              },
+            ]);
           }
         })
         .then(() => fetchInscripciones())
@@ -191,9 +204,9 @@ const Horario = ({ userId }) => {
           );
         });
     } catch (error) {}
-  }
+  };
 
-  const addInscripcion = () => {    
+  const addInscripcion = () => {
     setLoading(true);
 
     try {
@@ -203,28 +216,28 @@ const Horario = ({ userId }) => {
           Accept: "application/json",
           "Content-type": "application/json",
         },
-        body: JSON.stringify({ usuario: userId, materia: nrcAdd })
+        body: JSON.stringify({ usuario: userId, materia: nrcAdd }),
       };
 
       fetch(`${process.env.EXPO_PUBLIC_API_URL}/inscripciones/new`, options)
         .then((response) => {
-          if(response.status === 200){
+          if (response.status === 200) {
             select.current.reset();
             setNrcAdd(0);
             setVisibleModal(false);
-            Alert.alert('Inscripcion añadida', 'Se ha inscrito correctamente', [
+            Alert.alert("Inscripcion añadida", "Se ha inscrito correctamente", [
               {
-                'text': 'Ok',
-                'style': 'cancel'
-              }
-            ])
-          }else {
-            Alert.alert('Error', 'Ha ocurrido un error al inscribirse', [
+                text: "Ok",
+                style: "cancel",
+              },
+            ]);
+          } else {
+            Alert.alert("Error", "Ha ocurrido un error al inscribirse", [
               {
-                'text': 'Ok',
-                'style': 'cancel'
-              }
-            ])
+                text: "Ok",
+                style: "cancel",
+              },
+            ]);
           }
         })
         .then(() => fetchInscripciones())
@@ -235,12 +248,12 @@ const Horario = ({ userId }) => {
           );
         });
     } catch (error) {}
-  }
+  };
 
   useEffect(() => {
     fetchInscripciones();
   }, []);
-  
+
   useEffect(() => {
     if (!flagFirstFetch) {
       filterMaterias();
@@ -248,13 +261,13 @@ const Horario = ({ userId }) => {
       setFlagFirstFetch(false);
     }
   }, [materias]);
-  
+
   useEffect(() => {
     if (materias.length > 0) {
       filterMaterias();
     }
   }, [inscripciones]);
-  
+
   const fetchMaterias = () => {
     setLoading(true);
     const options = {
@@ -264,21 +277,24 @@ const Horario = ({ userId }) => {
         "Content-type": "application/json",
       },
     };
-  
+
     fetch(`${process.env.EXPO_PUBLIC_API_URL}/materias`, options)
       .then((response) => response.json())
       .then((data) => {
         setMaterias(data);
       })
       .catch((error) => {
-        console.log(`Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/materias`, error);
+        console.log(
+          `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/materias`,
+          error
+        );
       })
       .finally(() => setLoading(false));
   };
-  
+
   const fetchInscripciones = () => {
     setLoading(true);
-  
+
     const options = {
       method: "GET",
       headers: {
@@ -286,17 +302,20 @@ const Horario = ({ userId }) => {
         "Content-type": "application/json",
       },
     };
-  
+
     fetch(`${process.env.EXPO_PUBLIC_API_URL}/inscripciones/${userId}`, options)
       .then((response) => response.json())
       .then((data) => {
         setInscripciones(data);
       })
       .catch((error) => {
-        console.log(`Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/inscripciones/${userId}`, error);
+        console.log(
+          `Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/inscripciones/${userId}`,
+          error
+        );
       })
       .finally(() => {
-        setLoading(false); 
+        setLoading(false);
         if (materias.length === 0) {
           fetchMaterias();
         }
@@ -412,17 +431,28 @@ const Horario = ({ userId }) => {
               );
             }}
           />
-          <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 20}}>
-          <Button mode="elevated" style={{backgroundColor: theme.colors.tertiary}} onPress={addInscripcion} disabled={loading}>
-            <Text>
-              Confirmar
-            </Text>
-          </Button>
-          <Button mode="elevated" style={{backgroundColor: theme.colors.secondary}} onPress={() => setVisibleModal(false)}>
-            <Text>
-              Cancelar
-            </Text>
-          </Button>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginTop: 20,
+            }}
+          >
+            <Button
+              mode="elevated"
+              style={{ backgroundColor: theme.colors.tertiary }}
+              onPress={addInscripcion}
+              disabled={loading}
+            >
+              <Text>Confirmar</Text>
+            </Button>
+            <Button
+              mode="elevated"
+              style={{ backgroundColor: theme.colors.secondary }}
+              onPress={() => setVisibleModal(false)}
+            >
+              <Text>Cancelar</Text>
+            </Button>
           </View>
         </Modal>
       </Portal>
@@ -447,21 +477,21 @@ const stylesLocal = StyleSheet.create({
     marginVertical: 8,
     marginHorizontal: 16,
     borderRadius: 10,
-  }
+  },
 });
 
 export default function HorarioAlumnosAdmin({ route, navigation }) {
-    const { alumnoId } = route.params;
+  const { alumnoId } = route.params;
 
-    useEffect(() => {
-      if(alumnoId === 0) {
-        navigation.navigate("AlumnoHome")
-      }
-    }, [])
-    
-    return(
-      <View style={{flexDirection: 'column', height: '100%'}}>
-        <Horario userId={alumnoId}/>
-      </View>
-    )
+  useEffect(() => {
+    if (alumnoId === 0) {
+      navigation.navigate("AlumnoHome");
+    }
+  }, []);
+
+  return (
+    <View style={{ flexDirection: "column", height: "100%" }}>
+      <Horario userId={alumnoId} />
+    </View>
+  );
 }

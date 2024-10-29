@@ -2,9 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
-  Alert,
-  TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
 } from "react-native";
 import { styles as style } from "@/constants/styles";
@@ -12,16 +9,8 @@ import theme from "@/constants/theme";
 import Icon from "react-native-vector-icons/FontAwesome6";
 import { getDateFormat24 } from "@/hooks/date";
 import {
-  Checkbox,
   Text,
-  Modal,
-  Portal,
-  TextInput as Input,
-  Button,
 } from "react-native-paper";
-import * as DocumentPicker from "expo-document-picker";
-import { ALERT_TYPE, Toast } from "react-native-alert-notification";
-import { Linking } from "react-native";
 import SelectDropdown from "react-native-select-dropdown";
 import WebView from "react-native-webview";
 
@@ -32,6 +21,9 @@ const ViewReportes = ({ route, navigation }) => {
   const [materia, setMateria] = useState();
   const [loading, setLoading] = useState(false);
 
+  /**
+   * Funcion para traer la informacion de la materia ligada a la pantalla en el momento.
+   */
   const fetchMateria = () => {
     setLoading(true);
 
@@ -60,6 +52,9 @@ const ViewReportes = ({ route, navigation }) => {
     } catch (error) {}
   };
 
+  /**
+   * Funcion para traer la informacion de todos los reportes ligados a la materia en la pantalla.
+   */
   const fetchReportes = () => {
     setLoading(true);
 
@@ -146,9 +141,7 @@ const ViewReportes = ({ route, navigation }) => {
               </Text>
             </View>
             <SelectDropdown
-              data={reportes.map(reporte => {
-                return {key: Object.keys(JSON.parse(materia.temas)).find(key => key.startsWith(reporte.temas + "_")).replace('_', '. '), reporte: reporte.pdf_uid};
-              }).filter(key => key?.key !== undefined)}
+              data={reportes.filter(x => x.pdf_uid !== "")}
               renderButton={(selectedItem, isOpen) => {
                 return (
                   <View
@@ -165,7 +158,7 @@ const ViewReportes = ({ route, navigation }) => {
                     }}
                   >
                     <Text style={{ fontSize: 18, paddingHorizontal: 15 }}>
-                      {selectedItem?.key || "Selecciona un reporte"}
+                      {selectedItem ? `Semana ${selectedItem.semana}` : "Seleccione un reporte"}
                     </Text>
                     <Icon
                       name="chevron-down"
@@ -191,11 +184,11 @@ const ViewReportes = ({ route, navigation }) => {
                     paddingVertical: 10,
                   }}
                 >
-                  <Text>{item?.key}</Text>
+                  <Text>Semana {item?.semana}</Text>
                 </View>
               )}
               search
-              onSelect={(selectedItem) => setCurrentPdf(`${process.env.EXPO_PUBLIC_STORAGE_URL}/pdfs/${selectedItem.reporte}`)}
+              onSelect={(selectedItem) => setCurrentPdf(`${process.env.EXPO_PUBLIC_STORAGE_URL}/pdfs/${selectedItem.pdf_uid}`)}
               dropdownStyle={{ borderRadius: 10 }}
               searchInputTxtColor={"black"}
               searchPlaceHolder={"Search here"}

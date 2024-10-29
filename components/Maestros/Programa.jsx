@@ -1,16 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { styles } from "@/constants/styles";
 import theme from "@/constants/theme";
 import { Text } from "react-native-paper";
 import { View, ActivityIndicator, ScrollView, TextInput } from "react-native";
-import { getTemaData } from "../../hooks/uids";
+import SelectDropdown from "react-native-select-dropdown";
+import Icon from "react-native-vector-icons/FontAwesome6";
+import { Formik } from "formik";
+import useUids from "../../hooks/uids";
 
 export default function ProgramaDetails({ route }) {
   const { materiaNrc, programaClave } = route.params;
+  const selectDepartamento = useRef();
+  const [departamentos, setDepartamentos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [values, setValues] = useState();
   const [editable, setEditable] = useState(false);
   const [update, setUpdate] = useState(true);
+
+  // Estados para los temas
+  const { uids, setUids, renderTree } = useUids();
 
   const fetchPrograma = () => {
     setLoading(true);
@@ -28,7 +36,7 @@ export default function ProgramaDetails({ route }) {
       fetch(url, options)
         .then((response) => response.json())
         .then((data) => {
-          setUids(JSON.parse(data?.temas))
+          setUids(JSON.parse(data?.temas));
           setValues(data);
         })
         .then(() => setLoading(false))
@@ -41,62 +49,55 @@ export default function ProgramaDetails({ route }) {
     } catch (error) {}
   };
 
+  /**
+   * Obtiene todos los departamentos desde el servidor y actualiza los `departamentos`.
+   */
+  const fetchDepartamentos = () => {
+    try {
+      const options = {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-type": "application/json",
+        },
+      };
+
+      fetch(`${process.env.EXPO_PUBLIC_API_URL}/departamentos`, options)
+        .then((response) => response.json())
+        .then((data) => {
+          setDepartamentos(data);
+        })
+        .finally(() => {
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.log(
+            `Error en la solicitud a: ${process.env.EXPO_PUBLIC_API_URL}/departamentos`,
+            error
+          );
+          setLoading(false);
+        });
+    } catch (error) {
+      console.log("Error al intentar obtener los departamentos", error);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchPrograma();
+    fetchDepartamentos();
   }, []);
 
-  /**
-   * Section to render tree of subjects
-   */
-  const [uids, setUids] = useState([]);
-
-  /**
-   * Function to sort the tree of uids by the number of subject
-   * @param {String} a
-   * @param {String} b
-   * @returns String[]
-   */
-  const sortTree = (a, b) => {
-    const matchA = getTemaData(a);
-    const matchB = getTemaData(b);
-
-    if (matchA && matchB) {
-      const numA = matchA[1].split(".").map(Number);
-      const numB = matchB[1].split(".").map(Number);
-
-      for (let i = 0; i < Math.max(numA.length, numB.length); i++) {
-        const valA = numA[i] || 0;
-        const valB = numB[i] || 0;
-
-        if (valA !== valB) {
-          return valA - valB;
-        }
-      }
-    }
-    return 0;
-  };
-
-  /**
-   * Function to render the array of uids
-   * @returns View to render the uids
-   */
-  const renderTree = () => {
-    return uids.sort(sortTree).map((uid) => {
-      const _paddingLeft = getTemaData(uid)[1].split(".").length * 15;
-      return (
-        <View key={uid} style={{ paddingLeft: _paddingLeft }}>
-          <View style={styles.programas.checkboxRow}>
-            <Text
-              style={{ ...(!editable && { marginBottom: 15 }), fontSize: 15 }}
-            >
-              {getTemaData(uid)[1]}. {getTemaData(uid)[2]} -{" "}
-              {getTemaData(uid)[4]} h
-            </Text>
-          </View>
-        </View>
+  // Hook para actualizar las selecciones cuando cambia `values`
+  useEffect(() => {
+    try {
+      selectDepartamento.current?.selectIndex(
+        departamentos.findIndex((x) => x.id === values?.departamento) + 1
       );
-    });
-  };
+    } catch (error) {
+      console.log(error);
+    }
+  }, [departamentos, values]);
 
   return (
     <View style={{ flex: 1, position: "relative" }}>
@@ -147,6 +148,62 @@ export default function ProgramaDetails({ route }) {
               />
             </View>
           </View>
+
+          <View style={{ ...styles.general.center, width: "100%" }}>
+            <View
+              style={{
+                ...styles.programas.cards_show,
+                backgroundColor: theme.colors.secondary,
+                marginTop: 20,
+              }}
+            >
+              <Text>Departamento del programa</Text>
+              <SelectDropdown
+                data={[{ clave: null, nombre: "Ninguno" }, ...departamentos]}
+                disabled
+                ref={selectDepartamento}
+                renderButton={(selectedItem, isOpen) => {
+                  return (
+                    <View
+                      style={{
+                        ...styles.general.button_select,
+                        width: "90%",
+                      }}
+                    >
+                      <Text>
+                        {(selectedItem && `${selectedItem.departamento}`) ||
+                          "Ninguno"}
+                      </Text>
+                    </View>
+                  );
+                }}
+                renderItem={(item, index, isSelected) => (
+                  <View
+                    style={{
+                      ...styles.general.center,
+                      ...(isSelected && {
+                        backgroundColor: theme.colors.tertiary_op,
+                      }),
+                      paddingVertical: 10,
+                    }}
+                  >
+                    <Text>{item.departamento}</Text>
+                  </View>
+                )}
+                search
+                dropdownStyle={{ borderRadius: 10 }}
+                searchInputTxtColor={"black"}
+                searchPlaceHolder={"Search here"}
+                searchPlaceHolderColor={"grey"}
+                renderSearchInputLeftIcon={() => {
+                  return (
+                    <Icon name={"magnifying-glass"} color={"black"} size={18} />
+                  );
+                }}
+              />
+            </View>
+          </View>
+
           <View
             style={{
               ...styles.general.center,
@@ -347,7 +404,7 @@ export default function ProgramaDetails({ route }) {
               />
             </View>
           </View>
-          <View style={{...styles.programas.container, marginBottom: 20}}>
+          <View style={{ ...styles.programas.container, marginBottom: 20 }}>
             <ScrollView style={{ maxHeight: "auto" }}>
               {renderTree(uids)}
             </ScrollView>

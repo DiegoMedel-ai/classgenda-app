@@ -21,10 +21,14 @@ import Icon from "react-native-vector-icons/FontAwesome6";
 import IconFeather from "react-native-vector-icons/Feather";
 import { Formik } from "formik";
 import { alumnoSchema } from "@/constants/schemas";
-import DatePicker from "react-native-date-picker";
-import { adjustTimeZone, getDateFormat, setDateTimeZone } from "@/hooks/date";
-import WeekdaySelector from "@/components/WeekDaySelect";
 
+/**
+ * Pantalla para poder administrar la lista de alumnos existentes, asi como todos los status de los mismos y sus datos, 
+ * permite borrar y modificar los horarios de los alumnos.
+ *
+ * @param {NavigationProp} navigation Parametro heredado para manejar la navegacion de la aplicación
+ * @returns {JSX.Element} Retorna un elemento para utilizarse como pantalla
+ */
 export default function AlumnosAdmin({ navigation }) {
   const initAlumno = {
     id: 0,
