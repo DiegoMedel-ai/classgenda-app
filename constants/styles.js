@@ -14,6 +14,12 @@ const styles = {
       justifyContent: "center",
       alignItems: "center",
     },
+    overlay_top: {
+      height: "100%",
+      width: "100%",
+      justifyContent: "top",
+      alignItems: "center",
+    },
     button: {
       marginTop: 40,
       width: "45%",
@@ -176,6 +182,36 @@ const styles = {
       alignItems: 'center',
       backgroundColor: theme.colors.primary,
       marginTop: 20,
+    },
+    container: {
+      padding: 20,
+      backgroundColor: theme.colors.secondary_op,
+      borderRadius: 10,
+      width: "90%",
+      marginHorizontal: "auto",
+    },
+    checkboxRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+  },
+  horario: {
+    touchable: {
+      width: "90%",
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      marginVertical: 10,
+      borderRadius: 10,
+    },
+    container: {
+      paddingTop: 20,
+      height: "100%",
+    },
+    card: {
+      padding: 15,
+      marginVertical: 8,
+      marginHorizontal: 16,
+      borderRadius: 10,
     }
   }
 };

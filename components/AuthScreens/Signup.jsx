@@ -27,6 +27,7 @@ const SignUpScreen = ({ navigation }) => {
   const itemsRol = [
     { key: "2", rol: "Estudiante" },
     { key: "3", rol: "Profesor" },
+    { key: "4", rol: "Jefe de academia" },
   ];
 
   useEffect(() => {

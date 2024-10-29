@@ -9,7 +9,7 @@ import {
   Portal,
 } from 'react-native-paper';
 import theme from '@/constants/theme';
-import {View, ActivityIndicator, ScrollView, TextInput} from 'react-native';
+import {View, ActivityIndicator, ScrollView, TextInput, Alert} from 'react-native';
 import SelectDropdown from 'react-native-select-dropdown';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import IconFeather from 'react-native-vector-icons/Feather';
@@ -19,7 +19,19 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import {adjustTimeZone, getDateFormat, setDateTimeZone} from '../../hooks/date';
 import WeekdaySelector from '@/components/WeekDaySelect';
 
+/**
+ * Componente `MateriasAdmin` para la administración de materias.
+ * 
+ * Este componente permite gestionar la lista de materias, seleccionar una materia,
+ * editarla y eliminarla. También maneja la visibilidad de modales y el estado de carga,
+ * y contiene referencias para los selectores de programas y profesores.
+ * 
+ * @component
+ * 
+ * @returns {JSX.Element} El componente renderiza la interfaz de administración de materias.
+ */
 export default function MateriasAdmin() {
+  // Estado inicial de una materia
   const initMateria = {
     nrc: 0,
     programa: {},
@@ -30,21 +42,30 @@ export default function MateriasAdmin() {
     aula: null,
     profesor: null,
   };
-  const [materias, setMaterias] = useState([]);
-  const [programas, setProgramas] = useState([]);
-  const [profesores, setProfesores] = useState([])
-  const [loading, setLoading] = useState(false);
-  const [materiaSelected, setMateriaSelected] = useState(initMateria);
-  const [editable, setEditable] = useState(false);
-  const [update, setUpdate] = useState(true);
-  const [visibleModal, setVisibleModal] = useState(false);
-  const [successResult, setSuccessResult] = useState(false);
-  const [openInitHour, setOpenInitHour] = useState(false);
-  const [openFinalHour, setOpenFinalHour] = useState(false);
+
+  // Estados del componente
+  const [materias, setMaterias] = useState([]); // Lista de materias
+  const [programas, setProgramas] = useState([]); // Lista de programas
+  const [profesores, setProfesores] = useState([]); // Lista de profesores
+  const [loading, setLoading] = useState(false); // Estado de carga
+  const [materiaSelected, setMateriaSelected] = useState(initMateria); // Materia seleccionada
+  const [editable, setEditable] = useState(false); // Indica si la materia es editable
+  const [update, setUpdate] = useState(true); // Indica si se va a actualizar o añadir una materia
+  const [visibleModal, setVisibleModal] = useState(false); // Visibilidad del modal de éxito
+  const [successResult, setSuccessResult] = useState(false); // Resultado de la operación de éxito
+  const [openInitHour, setOpenInitHour] = useState(false); // Control de visibilidad del selector de hora de inicio
+  const [openFinalHour, setOpenFinalHour] = useState(false); // Control de visibilidad del selector de hora final
+
+  // Referencias a los selectores
   const select = useRef();
   const selectPrograma = useRef();
   const selectProfesor = useRef();
 
+  /**
+   * Obtiene todas las materias desde el servidor y actualiza el estado `materias`.
+   *
+   * @param {boolean} [loadingS=false] Indica si la carga ya está en curso.
+   */
   const fetchMaterias = (loadingS = false) => {
     if (!loadingS) {
       setLoading(true);
@@ -65,19 +86,26 @@ export default function MateriasAdmin() {
         .then(data => {
           setMaterias(data);
         })
-        .then(() => setLoading(false))
+        .finally(() => setLoading(false))
         .catch(error => {
-          console.log(`Fetch error to: ${process.env.EXPO_PUBLIC_API_URL}/materia`, error);
+          console.log(`Error en fetch: ${process.env.EXPO_PUBLIC_API_URL}/materias`, error);
         });
     } catch (error) {}
   };
 
+  /**
+   * Actualiza una materia enviando una solicitud POST al servidor con los valores del formulario.
+   * Incluye los temas en el cuerpo de la solicitud y maneja la respuesta para mostrar el resultado.
+   *
+   * @param {Object} values Valores del formulario enviados para actualizar la materia.
+   */
   const updateFun = values => {
     setLoading(true);
 
-    const data = values
+    const data = {...values};
     data.programa = data.programa.clave;
     data.profesor = data.profesor.id;
+
     try {
       const options = {
         method: 'POST',
@@ -104,11 +132,63 @@ export default function MateriasAdmin() {
           }
         })
         .catch(error => {
-          console.log(`Fetch error to: ${url}`, error);
+          console.log(`Error en fetch: ${url}`, error);
         });
     } catch (error) {}
   };
 
+  /**
+   * Elimina una materia seleccionado enviando una solicitud GET al servidor.
+   * Muestra una alerta confirmando la eliminación o un error si no se puede eliminar.
+   */
+  const deleteFun = () => {
+    setLoading(true);
+
+    try {
+      const options = {
+        method: 'GET',
+        headers: {
+          'Content-type': 'application/json',
+        },
+      };
+
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/materias/delete/${materiaSelected.nrc}`;
+
+      fetch(url, options)
+        .then(response => {
+          if (response.status === 200) {
+            Alert.alert(
+              'Materia eliminada',
+              'Se ha eliminado el registro correctamente',
+              [
+                {
+                  text: 'Ok',
+                  style: 'cancel',
+                  onPress: () => fetchMaterias(),
+                },
+              ]
+            );
+          } else {
+            Alert.alert(
+              'Error',
+              'Se tienen horarios o programas relacionados con esta materia, por lo que no se puede eliminar',
+              [
+                {
+                  text: 'Ok',
+                  style: 'cancel',
+                  onPress: () => setLoading(false),
+                },
+              ]
+            );
+          }
+        })
+        .catch(error => {
+          console.log(`Error en fetch: ${url}`, error);
+        });
+    } catch (error) {}
+  };
+
+  // Hook para cargar materias, programas y profesores al montar el componente
   useEffect(() => {
     try {
       const options = {
@@ -118,35 +198,36 @@ export default function MateriasAdmin() {
         },
       };
 
+      // Obtener programas
       const urlProgramas = `${process.env.EXPO_PUBLIC_API_URL}/programas`;
 
       fetch(urlProgramas, options)
         .then(response => response.json())
         .then(data => {
-          if (data) {
-            setProgramas(data);
-          }
+          setProgramas(data);
         })
         .catch(error => {
-          console.log(`Fetch error to: ${url}`, error);
+          console.log(`Error en fetch: ${urlProgramas}`, error);
         });
-        
+
+      // Obtener profesores
       const urlProfesores = `${process.env.EXPO_PUBLIC_API_URL}/profesores`;
 
       fetch(urlProfesores, options)
         .then(response => response.json())
         .then(data => {
-          if (data) {
-            setProfesores(data);
-          }
+          setProfesores(data);
         })
         .catch(error => {
-          console.log(`Fetch error to: ${url}`, error);
+          console.log(`Error en fetch: ${urlProfesores}`, error);
         });
     } catch (error) {}
+
+    // Obtener materias
     fetchMaterias();
   }, []);
 
+  // Hook para actualizar las selecciones y los temas cuando cambia `materiaSelected`
   useEffect(() => {
     selectPrograma.current?.selectIndex(
       programas.findIndex(x => x.clave === materiaSelected?.programa?.clave),
@@ -156,6 +237,7 @@ export default function MateriasAdmin() {
     );
   }, [materiaSelected]);
 
+  // Hook para inicializar `materiaSelected` cuando cambia `update`
   useEffect(() => {
     setMateriaSelected(initMateria);
   }, [update]);
@@ -422,6 +504,7 @@ export default function MateriasAdmin() {
                         style={{...styles.general.button_input}}
                         editable={editable || !update}
                         onChangeText={handleChange('aula')}
+                        keyboardType='numeric'
                         value={
                           values?.aula?.toString()
                         }
@@ -526,7 +609,24 @@ export default function MateriasAdmin() {
                     <Button
                       mode="elevated"
                       textColor="black"
-                      buttonColor={theme.colors.tertiary}>
+                      buttonColor={theme.colors.tertiary}
+                      onPress={() => {
+                        Alert.alert(
+                          "Eliminar materia",
+                          "Estás seguro de eliminar esta materia?",
+                          [
+                            {
+                              text: "Confirmar",
+                              style: "default",
+                              onPress: () => deleteFun(),
+                            },
+                            {
+                              text: "Cancelar",
+                              style: "cancel",
+                            },
+                          ]
+                        );
+                      }}>
                       Eliminar
                     </Button>
                   </View>

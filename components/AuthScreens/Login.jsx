@@ -6,7 +6,7 @@ import Icon from "react-native-vector-icons/Feather";
 import theme from "@/constants/theme";
 import { Formik } from "formik";
 import { loginSchema } from "@/constants/schemas";
-import { LoginContext } from "@/components/MainComponent"
+import LoginContext from "@/constants/loginContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Login = ({ navigation }) => {
@@ -14,11 +14,6 @@ const Login = ({ navigation }) => {
   const [loading, setLoading] = useState(false)
 
   const { user, getUser } = useContext(LoginContext)
-
-  useEffect(() => {
-    console.log(user);
-    
-  }, [user])
 
   const login = (values) => {
     setLoading(true)
@@ -49,6 +44,7 @@ const Login = ({ navigation }) => {
         try {
           await AsyncStorage.setItem('user:id', data.user.id.toString());
           await AsyncStorage.setItem('user:rol', data.user.rol);
+          await AsyncStorage.setItem('user:departamentos', JSON.stringify(data.user.departamentos));
           
           getUser();
         } catch (error) {
@@ -153,7 +149,7 @@ const Login = ({ navigation }) => {
               width: "100%",
             }}
           >
-            <Button
+            {/* <Button
               mode="contained"
               style={styles.login.buttons}
               onPress={() => navigation.navigate("Login")}
@@ -166,7 +162,7 @@ const Login = ({ navigation }) => {
               >
                 Forgot password?
               </Text>
-            </Button>
+            </Button> */}
             <Button
               mode="contained"
               style={styles.login.buttons}

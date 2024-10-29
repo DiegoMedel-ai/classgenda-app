@@ -29,10 +29,19 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "expo-document-picker"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "08da506f-5a07-4db7-8898-4012b9333e1a"
+      }
     }
   }
 }
