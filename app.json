@@ -20,7 +20,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.ClassGenda"
+      "package": "com.anonymous.ClassGenda",
+      "usesCleartextTraffic": true
     },
     "web": {
       "bundler": "metro",
@@ -30,7 +31,14 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-document-picker"
+      "expo-document-picker",
+      ["expo-build-properties",
+      {
+        "android": {
+          "usesCleartextTraffic": true
+        }
+      }
+    ]
     ],
     "experiments": {
       "typedRoutes": true

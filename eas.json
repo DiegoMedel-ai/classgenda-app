@@ -10,6 +10,11 @@
     "preview": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL" : "http://159.100.6.180:8000/api",
+        "EXPO_PUBLIC_STORAGE_IMAGE_URL" : "http://159.100.6.180:8000/storage",
+        "EXPO_PUBLIC_STORAGE_URL" : "http://159.100.6.180:8000/storage"
       }
     },
     "production": {}

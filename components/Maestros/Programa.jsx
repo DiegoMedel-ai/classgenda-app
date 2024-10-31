@@ -20,6 +20,9 @@ export default function ProgramaDetails({ route }) {
   // Estados para los temas
   const { uids, setUids, renderTree } = useUids();
 
+  /**
+   * Funcion para traer la informacion del programa ligado a la pantalla en el momento.
+   */
   const fetchPrograma = () => {
     setLoading(true);
 

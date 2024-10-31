@@ -91,7 +91,7 @@ const OptionsMateria = ({ route, navigation }) => {
           shadowRadius: 5,
         }}
       >
-        <CircularProgressBar percentage={percentage}/>
+        <CircularProgressBar percentage={isNaN(percentage) ? 0 : percentage}/>
       </View>
       <View
         style={{
