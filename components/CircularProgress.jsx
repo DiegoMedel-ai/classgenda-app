@@ -6,7 +6,7 @@ import theme from "@/constants/theme";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-const CircularProgressBar = ({ percentage }) => {
+const CircularProgressBar = ({ percentage = 0 }) => {
   const strokeWidth = 15;
   const radius = 65;
   const circumference = 2 * Math.PI * radius;
@@ -21,7 +21,7 @@ const CircularProgressBar = ({ percentage }) => {
     Animated.timing(animatedValue, {
       toValue: percentage,
       duration: 1500,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   }, [percentage]);
 

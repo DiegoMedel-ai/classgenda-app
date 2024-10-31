@@ -24,7 +24,7 @@ const Login = ({ navigation }) => {
         "Content-type": "application/json",
       },
       body: JSON.stringify(values)
-    };    
+    };
 
     fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/login`, options)
       .then((response) => {
