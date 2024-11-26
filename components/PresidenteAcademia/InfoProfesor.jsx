@@ -146,7 +146,7 @@ export default function ProfesorDetails({ route }) {
               <TextInput
                 style={{ ...styles.general.button_input }}
                 editable={false}
-                value={values?.id.toString()}
+                value={values?.codigo}
               />
             </View>
             <View

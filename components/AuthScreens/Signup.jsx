@@ -16,13 +16,15 @@ import Icon from "react-native-vector-icons/Feather";
 import { Formik } from "formik";
 import { signUpSchema } from "@/constants/schemas";
 
+/**
+ * Pantalla para poder registrar nuevos usuarios en la base de datos donde se inicia como inactivo
+ * @param {Navigation} navigation Hook para poder manejar la navegacion de la app
+ * @returns {JSX.Element}
+ */
 const SignUpScreen = ({ navigation }) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [visibleModal, setVisibleModal] = useState(false)
   const [successResult, setSuccessResult] = useState(false)
-  const [codigo, setCodigo] = useState(1);
-  const [visibleSelect, setVisibleSelect] = useState(false);
-  const [anchor, setAnchor] = useState(null);
 
   const itemsRol = [
     { key: "2", rol: "Estudiante" },
@@ -30,26 +32,6 @@ const SignUpScreen = ({ navigation }) => {
     { key: "4", rol: "Presidente de academia" },
     { key: "5", rol: "Jefe de departamento" },
   ];
-
-  useEffect(() => {
-    const options = {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-type": "application/json",
-      },
-    };
-
-    fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/last`, options)
-      .then((response) => response.json())
-      .then((data) => {
-        setCodigo(`${data.id}`);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.log("Fetch error:", error);
-      });
-  }, []);
 
   const confirmAlert = (values) => 
     Alert.alert('Confirme sus datos', 'Está seguro de que sus datos son correctos?', [
@@ -73,6 +55,8 @@ const SignUpScreen = ({ navigation }) => {
       },
       body: JSON.stringify(values)
     };
+    console.log(options.body);
+    
 
     fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/new`, options)
       .then((response) => {
@@ -103,7 +87,7 @@ const SignUpScreen = ({ navigation }) => {
               nombre: "",
               apellido: "",
               correo: "",
-              codigo: codigo,
+              codigo: "",
               rol: "2",
               password: "",
               passwordConfirm: ""
@@ -193,15 +177,14 @@ const SignUpScreen = ({ navigation }) => {
                     activeOutlineColor="black"
                     style={{
                       ...styles.login.input_text,
-                      width: "32.5%",
+                      width: "50%",
                       marginRight: 10,
                     }}
                     theme={styles.login.input_text}
                     label={"Codigo"}
                     mode={"outlined"}
-                    keyboardType="number"
-                    readOnly
-                    value={values.codigo.toString()}
+                    onChangeText={handleChange("codigo")}
+                    value={values.codigo}
                     onBlur={handleBlur("codigo")}
                   />
                   <SelectDropdown
@@ -254,10 +237,18 @@ const SignUpScreen = ({ navigation }) => {
                     dropdownStyle={{ borderRadius: 10 }}
                   />
                 </View>
+                <HelperText
+                  type="error"
+                  visible={errors.codigo !== ""}
+                  padding="none"
+                  style={{ width: "50%", marginHorizontal: 'auto' }}
+                >
+                  {errors.codigo}
+                </HelperText>
 
                 <Input
                   activeOutlineColor="black"
-                  style={{...styles.login.input_text, marginTop: 20, width: '55%'}}
+                  style={{...styles.login.input_text, marginTop: 0, width: '55%'}}
                   theme={styles.login.input_text}
                   label={"Password"}
                   mode={"outlined"}

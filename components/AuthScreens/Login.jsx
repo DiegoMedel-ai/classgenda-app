@@ -9,6 +9,11 @@ import { loginSchema } from "@/constants/schemas";
 import LoginContext from "@/constants/loginContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+/**
+ * Pantalla para poder ingresar a la plataforma con correo de usuario y contraseña
+ * @param {Navigation} navigation Hook para poder manejar la navegacion de la app
+ * @returns {JSX.Element}
+ */
 const Login = ({ navigation }) => {
   const [result, setResult] = useState("")
   const [loading, setLoading] = useState(false)
