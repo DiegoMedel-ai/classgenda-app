@@ -118,7 +118,7 @@ function DrawerAdmin(props) {
               style={styles.drawer.profileImage}
             />
             <Chip style={{marginVertical: 5, alignSelf: 'flex-start', backgroundColor: theme.colors.secondary }}>{userInfo.nombre}</Chip>
-            <Chip style={{marginVertical: 5, alignSelf: 'flex-start', backgroundColor: theme.colors.tertiary }}>Codigo: {user.id}</Chip>
+            <Chip style={{marginVertical: 5, alignSelf: 'flex-start', backgroundColor: theme.colors.tertiary }}>Codigo: {userInfo.codigo}</Chip>
           </View>
         </ImageBackground>
       </View>

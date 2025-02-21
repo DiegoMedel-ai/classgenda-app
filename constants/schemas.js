@@ -1,10 +1,10 @@
 import * as Yup from 'yup'
 
 const signUpSchema = Yup.object({
+    codigo: Yup.string().max(25).required('Se necesita un codigo'),
     nombre: Yup.string().required('Se necesita un nombre!'),
     apellido: Yup.string().required('Se necesita un apellido!'),
     correo: Yup.string().email('Se necesita un correo valido').required('Se necesita un correo!'),
-    codigo: Yup.number().required(),
     rol: Yup.number().required(),
     password: Yup.string().required("Se necesita una contraseña!"),
     passwordConfirm: Yup.string().oneOf([Yup.ref('password'), null], 'Las contraseñas deben coincidir')
@@ -42,6 +42,7 @@ const materiaSchema = Yup.object({
 
 const alumnoSchema = Yup.object({
     id: Yup.number().required(),
+    codigo: Yup.string().max(25).required('Se necesita un codigo'),
     nombre: Yup.string().required(),
     apellido: Yup.string().required(),
     correo: Yup.string().email("Se necesita un correo valido").required(),
@@ -53,6 +54,7 @@ const alumnoSchema = Yup.object({
 
 const maestroSchema = Yup.object({
     id: Yup.number().required(),
+    codigo: Yup.string().max(25).required('Se necesita un codigo'),
     nombre: Yup.string().required(),
     apellido: Yup.string().required(),
     correo: Yup.string().email("Se necesita un correo valido").required(),

@@ -28,6 +28,7 @@ import WeekdaySelector from "@/components/WeekDaySelect";
 export default function MaestrosAdmin({ navigation }) {
   const initMaestro = {
     id: 0,
+    codigo: "",
     rol: 3,
     correo: "",
     telefono: "",
@@ -466,9 +467,9 @@ export default function MaestrosAdmin({ navigation }) {
                             marginVertical: "auto",
                             marginTop: 0,
                           }}
-                          editable={false}
-                          onChangeText={handleChange("id")}
-                          value={values?.id?.toString()}
+                          editable={editable || !update}
+                          onChangeText={handleChange("codigo")}
+                          value={values?.codigo}
                         />
                       </View>
                     </View>

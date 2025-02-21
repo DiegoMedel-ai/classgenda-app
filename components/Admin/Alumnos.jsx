@@ -32,6 +32,7 @@ import { alumnoSchema } from "@/constants/schemas";
 export default function AlumnosAdmin({ navigation }) {
   const initAlumno = {
     id: 0,
+    codigo: "",
     rol: 2,
     correo: "",
     telefono: "",
@@ -398,9 +399,9 @@ export default function AlumnosAdmin({ navigation }) {
                             marginVertical: "auto",
                             marginTop: 0,
                           }}
-                          editable={false}
-                          onChangeText={handleChange("id")}
-                          value={values?.id?.toString()}
+                          editable={editable || !update}
+                          onChangeText={handleChange("codigo")}
+                          value={values?.codigo}
                         />
                       </View>
                     </View>

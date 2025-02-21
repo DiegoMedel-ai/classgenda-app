@@ -83,7 +83,7 @@ export default function ListProfesores({navigation}) {
         options
       )
         .then((response) => response.json())
-        .then((data) => {
+        .then((data) => {          
           setProfesores(data);
         })
         .then(() => setLoading(false))
@@ -215,7 +215,7 @@ export default function ListProfesores({navigation}) {
                 key={index}
                 style={{
                   width: "100%",
-                  height: "auto",
+                  height: 60,
                   backgroundColor: "white",
                   marginVertical: 10,
                   borderRadius: 15,
@@ -228,8 +228,8 @@ export default function ListProfesores({navigation}) {
               >
                 <Image
                   style={{
-                    height: 35,
-                    width: 35,
+                    height: 40,
+                    width: 40,
                     borderRadius: 50,
                     marginRight: 10,
                   }}
@@ -241,9 +241,9 @@ export default function ListProfesores({navigation}) {
                       : require("@/assets/images/user.png")
                   }
                 />
-                <Text style={{ width: "90%" }}>
-                  ID: {profesor.profesor.id} - {profesor.profesor.nombre}{" "}
-                  {profesor.profesor.apellido}
+                <Text style={{height: 60, verticalAlign: 'middle', width: '90%'}}>
+                  Codigo: {profesor.profesor.codigo} {'\n'}
+                  {profesor.profesor.nombre} {profesor.profesor.apellido}
                 </Text>
               </TouchableOpacity>
             ))}

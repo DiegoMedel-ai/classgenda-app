@@ -99,7 +99,7 @@ export default function ViewListAlumnos({ route }) {
               key={index}
               style={{
                 width: "100%",
-                height: 50,
+                height: 60,
                 backgroundColor: "white",
                 marginVertical: 10,
                 borderRadius: 15,
@@ -111,10 +111,11 @@ export default function ViewListAlumnos({ route }) {
             >
               <Image
                 style={{
-                  height: 35,
-                  width: 35,
+                  height: 40,
+                  width: 40,
                   borderRadius: 50,
-                  marginRight: 10
+                  marginRight: 10,
+                  marginVertical: 20
                 }}
                 source={
                   inscripcion.usuario.foto_url
@@ -124,8 +125,8 @@ export default function ViewListAlumnos({ route }) {
                     : require("@/assets/images/user.png")
                 }
               />
-              <Text>
-                ID: {inscripcion.usuario.id} - {inscripcion.usuario.nombre} {inscripcion.usuario.apellido}
+              <Text style={{height: 60, verticalAlign: 'middle'}}>
+                Codigo: {inscripcion.usuario.codigo} {'\n'} {inscripcion.usuario.nombre} {inscripcion.usuario.apellido}
               </Text>
             </View>
           ))}
