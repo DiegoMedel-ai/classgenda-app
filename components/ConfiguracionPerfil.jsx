@@ -296,7 +296,7 @@ const ConfigPerfil = ({ route }) => {
                           paddingHorizontal: 10,
                           marginBottom: 10,
                         }}
-                        value={values.id?.toString()}
+                        value={values.codigo}
                         editable={false}
                       />
                     </View>

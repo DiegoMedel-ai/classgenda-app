@@ -83,9 +83,7 @@ export default function ListProfesores({navigation}) {
         options
       )
         .then((response) => response.json())
-        .then((data) => {
-          console.log(data);
-          
+        .then((data) => {          
           setProfesores(data);
         })
         .then(() => setLoading(false))

@@ -79,7 +79,6 @@ export default function HomeAlumnos({ route, navigation }) {
             if (lastReporte) {
               const temas = JSON.parse(lastReporte.temas || '[]');
               const progreso = calculatePercentage(temas);
-              console.log(progreso);
               return { ...item, progreso }; 
             }
   
