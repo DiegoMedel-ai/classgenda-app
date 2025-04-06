@@ -6,6 +6,9 @@ import {
   ScrollView,
   ActivityIndicator,
   Pressable,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform
 } from "react-native";
 import { styles as style } from "@/constants/styles";
 import theme from "@/constants/theme";
@@ -26,6 +29,7 @@ const CheckboxTree = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false);
   const [newWeek, setNewWeek] = useState();
   const [selectedReport, setSelectedReport] = useState();
+  const [description, setDescription] = useState('')
   const selectWeek = useRef();
 
   const {
@@ -156,6 +160,7 @@ const CheckboxTree = ({ route, navigation }) => {
         .then((response) => response.json())
         .then((data) => {
           setLastUids(data[data.length - 1]);
+          setDescription(data[data.length - 1]?.descripcion);
           setReportes(data);
         })
         .finally(() => setLoading(false))
@@ -178,6 +183,7 @@ const CheckboxTree = ({ route, navigation }) => {
     formData.append("temas", JSON.stringify(uids));
     formData.append("materia", materiaNrc);
     formData.append("semana", newWeek);
+    formData.append("descripcion", description);
 
     try {
       const options = {
@@ -257,8 +263,7 @@ const CheckboxTree = ({ route, navigation }) => {
       name: file.name,
     });
     formData.append("semana", week);
-    formData.append("materia", materiaNrc);
-    
+    formData.append("materia", materiaNrc);    
 
     const url = `${process.env.EXPO_PUBLIC_API_URL}/reportes/upload`;
 
@@ -313,7 +318,15 @@ const CheckboxTree = ({ route, navigation }) => {
   };
 
   return (
-    <View style={{ ...style.general.overlay_top }}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+    >
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      keyboardShouldPersistTaps="handled"
+    >
+    <View style={{ ...style.general.overlay_top, flex: 1 }}>
       <View
         style={{
           height: 220,
@@ -421,6 +434,7 @@ const CheckboxTree = ({ route, navigation }) => {
                 onSelect={(selectedItem) => {
                   setUids(JSON.parse(selectedItem.temas));
                   setSelectedReport(selectedItem);
+                  setDescription(selectedItem?.descripcion);
                 }}
                 ref={selectWeek}
                 dropdownStyle={{ borderRadius: 10 }}
@@ -465,17 +479,36 @@ const CheckboxTree = ({ route, navigation }) => {
           </View>
         )}
       </View>
-      <View style={{ padding: 20, paddingVertical: 30, width: "100%" }}>
+      <View style={{ padding: 20, paddingVertical: 30, width: "100%", flex: 1 }}>
         {/* Sección para mostrar los temas que corresponden a la materia */}
         <View style={styles.container}>
-          <ScrollView style={{ maxHeight: 370 }}>{reportes && renderTree(reportes[reportes?.length - 1])}</ScrollView> 
+          <ScrollView style={{ maxHeight: 220 }}>{reportes && renderTree(reportes[reportes?.length - 1])}</ScrollView> 
+        </View>
+        <View style={{
+          flex: 1,
+          padding: 20,
+          justifyContent: 'flex-start',
+        }}>
+          <TextInput
+            multiline
+            style={{
+              height: 100,
+              borderWidth: 1,
+              borderRadius: 10,
+              padding: 10,
+              textAlignVertical: 'top',
+            }}
+            onChangeText={(text) => setDescription(text)}
+            readOnly={!newReport}
+            value={description}
+            placeholder="Escribe aquí..."
+          />
         </View>
         {selectedReport ? (
           selectedReport.pdf_uid === "" ?
           <Button
             mode="elevated"
             style={{
-              marginVertical: 15,
               backgroundColor: theme.colors.tertiary_op,
             }}
             onPress={() => selectFile(selectedReport.semana)}
@@ -487,7 +520,6 @@ const CheckboxTree = ({ route, navigation }) => {
           <Button
             mode="elevated"
             style={{
-              marginVertical: 15,
               backgroundColor: theme.colors.tertiary_op,
             }}
             onPress={() => openPDF(`https://docs.google.com/gview?embedded=true&url=${process.env.EXPO_PUBLIC_STORAGE_URL}/pdfs/${selectedReport.pdf_uid}`)}
@@ -500,7 +532,6 @@ const CheckboxTree = ({ route, navigation }) => {
             <Button
               mode="elevated"
               style={{
-                marginVertical: 15,
                 backgroundColor: theme.colors.tertiary_op,
               }}
               onPress={() => updateTemas()}
@@ -517,6 +548,8 @@ const CheckboxTree = ({ route, navigation }) => {
         </View>
       )}
     </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
